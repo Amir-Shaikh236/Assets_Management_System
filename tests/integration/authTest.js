@@ -1,0 +1,99 @@
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
+import request from 'supertest';
+
+import app from "../../server.js"
+import User from "../../models/User.js"
+import { connectTestDB, disconnectTestDB, clearTestDB } from '../setup/db.js';
+import AppError from '../../utils/AppError.js';
+
+// Polyfill the AppError module interface to map out the Vitest compilation mismatch
+if (typeof AppError !== 'function' && AppError.default) {
+    require.cache[require.resolve('../../utils/AppError.js')].exports = AppError.default;
+}
+
+beforeAll(async () => {
+    process.env.NODE_ENV = 'test';
+    process.env.JWT_ACCESS_SECRET = 'test_access_secret_999';
+    process.env.JWT_REFRESH_SECRET = 'test_refresh_secret_999';
+    await connectTestDB();
+    await clearTestDB();
+});
+
+afterAll(async () => await disconnectTestDB());
+
+describe("POST /api/auth/login Security & Flow Verification..", () => {
+
+    const testUser = {
+        firstName: "Amir",
+        lastName: "Asgar",
+        email: "amir.shaikh@disasterwatch.io", // Normalized casing to match query structures
+        password: 'Miyabhai_01'
+    };
+
+    beforeEach(async () => {
+        await clearTestDB();
+
+        // to prevent controller structural undefined array crashes during testing
+        const createdUser = await User.create(testUser);
+        createdUser.refreshTokens = [];
+        await createdUser.save();
+    });
+
+    it("Should issue an accessToken and a secure HttpOnly refreshToken cookie upon a valid credentials", async () => {
+        const response = await request(app)
+            .post("/api/auth/login")
+            .send({ email: testUser.email, password: testUser.password })
+            .expect(200);
+
+        // 1. Verifying Response Payload
+        expect(response.body.status).toBe("success");
+        expect(response.body.accessToken).toBeDefined();
+        expect(typeof response.body.accessToken).toBe('string');
+        expect(response.body.password).toBeUndefined(); // Prevent Password Leakage
+
+        // 2. Verify Cookie Security Flags
+        const setCookieHeader = response.headers["set-cookie"];
+        expect(setCookieHeader).toBeDefined();
+        expect(setCookieHeader[0]).toMatch(/refreshToken=/);
+        expect(setCookieHeader[0]).toMatch(/HttpOnly/i);
+        expect(setCookieHeader[0]).toMatch(/SameSite=Strict/i);
+    });
+
+    it("should reject login attempts with invalid password and return 401 without leaking user existence", async () => {
+        const response = await request(app)
+            .post("/api/auth/login")
+            .send({ email: testUser.email, password: "@Wrongpassword" })
+            .expect(401);
+
+        expect(response.body.status).toBe('fail');
+        expect(response.body.message).toBe("incorrect email or password");
+        expect(response.headers["set-cookie"]).toBeUndefined();
+    });
+
+    it("should detect Compromised token reuse and wipe all user refresh sessions", async () => {
+        // Step 1: Login to generate a valid refresh token
+        const loginRes = await request(app)
+            .post("/api/auth/login")
+            .send({ email: testUser.email, password: testUser.password });
+
+        const validCookie = loginRes.headers["set-cookie"][0];
+
+        // Step 2: Use token once to rotate it
+        const refreshRes = await request(app)
+            .post("/api/auth/refresh")
+            .set("Cookie", validCookie)
+            .expect(200);
+
+        // Step 3: Attempt to reuse the OLD token (simulating an attacker stealing it)
+        const attackRes = await request(app)
+            .post("/api/auth/refresh")
+            .set("Cookie", validCookie)
+            .expect(403);
+
+        expect(attackRes.body.message).toContain("Compromised token usage detected");
+
+        // Step 4: Verify the database wiped all Sessions for this user.
+        const compromisedUser = await User.scope('withRefreshTokens').findOne({ where: { email: testUser.email } });
+        expect(compromisedUser.refreshTokens.length).toBe(0);
+    });
+});
