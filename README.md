@@ -169,7 +169,6 @@ Current testing stack:
 | Authentication (JWT) | ✅ Completed |
 | Employee Master CRUD | ✅ Completed |
 | Asset Master CRUD | ✅ Completed |
-
 | Asset Category Master | 🚧 In Progress |
 | Issue Asset | ⏳ Planned |
 | Return Asset | ⏳ Planned |
