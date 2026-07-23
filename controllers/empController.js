@@ -1,5 +1,5 @@
 
-import Employee from '../models/Employee.js'
+import { Employee } from '../models/index.js'
 import AppError from '../utils/AppError.js'
 import { Op } from 'sequelize'
 
@@ -14,7 +14,8 @@ export const addEmployee = async (req, res, next) => {
         const employee = await Employee.create({ email, name, department, designation, status, JoiningDate });
 
         if (employee) {
-            res.status(201).json({ employee: employee.name, department: employee.department, designation: employee.designation })
+            // res.status(201).json({ employee: employee.name, department: employee.department, designation: employee.designation })
+            res.status(201).json(employee);
         }
 
     } catch (error) {

@@ -1,10 +1,26 @@
-import Asset from "../models/Asset.js";
+import { AssestsHistory, Asset, Category, Employee, sequelize } from "../models/index.js";
 import AppError from "../utils/AppError.js";
 
 export const getAssets = async (req, res, next) => {
     try {
+        const joinTables = [
+            {
+                model: Category,
+                as: 'category'
+            },
+            {
+                model: Employee,
+                as: 'currentHolder'
+            }
+        ]
 
-        const assets = await Asset.findAll({ limit: 10, offset: 0 });
+        let filter = {};
+
+        if (req.query?.status) {
+            filter.status = req.query.status;
+        }
+
+        const assets = await Asset.findAll({ where: filter, include: joinTables });
         res.status(200).json(assets)
 
     } catch (error) {
@@ -16,12 +32,12 @@ export const getAssets = async (req, res, next) => {
 export const addAssets = async (req, res, next) => {
     try {
 
-        const { serialNumber, make, model, value, branch, purchasedDate, status } = req.body;
+        const { serialNumber, make, model, value, branch, purchasedDate, status, categoryId, currentEmpId } = req.body;
         if (!serialNumber || !make || !model || !value || !branch || !purchasedDate || !status) {
             return next(new AppError(400, "Please Provide required details of Assest"));
         }
 
-        const assets = await Asset.create({ serialNumber, make, model, value, branch, purchasedDate, status });
+        const assets = await Asset.create({ serialNumber, make, model, value, branch, purchasedDate, status, categoryId, currentEmpId });
         res.status(201).json(assets);
 
     } catch (error) {
@@ -84,3 +100,51 @@ export const deleteAsset = async (req, res, next) => {
 
     }
 }
+
+
+// Issued Asset
+
+export const IssuedAsset = async (req, res, next) => {
+
+    const t = await sequelize.transaction();
+
+    try {
+
+        const { id } = req.params;
+        const { empId } = req.body;
+
+        const asset = await Asset.findByPk(id);
+        if (!asset) {
+            await t.rollback();
+            return next(new AppError(404, "Asset Not Found, Please provide valid Id"));
+
+        }
+
+        if (asset.status !== 'in_stock') {
+            await t.rollback();
+            return next(new AppError(400, `The Asset is not available for issue. Current Status: ${asset.status}`));
+
+        }
+
+        await asset.update({
+            status: 'issued',
+            currentEmpId: empId
+        }, { transaction: t });
+
+        await AssestsHistory.create({
+            action: 'issued',
+            assetId: asset.id,
+            empId: empId,
+            reason: null,
+        }, { transaction: 1 });
+
+        await t.commit();
+
+        res.status(200).json({ message: "Asset Issue Successfully", asset });
+
+    } catch (error) {
+        await t.rollback();
+        next(error)
+
+    }
+};

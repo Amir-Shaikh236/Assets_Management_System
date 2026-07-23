@@ -33,8 +33,8 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/employee", empRoutes);
-app.use('/api/assets/', assetRoutes);
-app.use('/api/categories/', CategoryRoutes);
+app.use('/api/assets', assetRoutes);
+app.use('/api/categories', CategoryRoutes);
 
 app.use(errorHandler);
 app.listen(PORT, () => console.log(`Server is Running on ${PORT}`));

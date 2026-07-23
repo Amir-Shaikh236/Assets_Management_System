@@ -167,13 +167,16 @@ Current testing stack:
 | PostgreSQL Integration | ✅ Completed |
 | Sequelize ORM Setup | ✅ Completed |
 | Authentication (JWT) | ✅ Completed |
+| Authentication Testing (Login) | ✅ Completed |
 | Employee Master CRUD | ✅ Completed |
 | Asset Master CRUD | ✅ Completed |
-| Asset Category Master | 🚧 In Progress |
-| Issue Asset | ⏳ Planned |
-| Return Asset | ⏳ Planned |
-| Scrap Asset | ⏳ Planned |
-| Asset History | ⏳ Planned |
+| Asset Category Master CRUD | ✅ Completed |
+| Database Associations | ✅ Completed |
+| Asset Issue Logic | ✅ Completed |
+| Asset History Model | ✅ Completed |
+| Asset Return | 🚧 In Progress |
+| Asset Scrap | ⏳ Planned |
+| Asset History UI | ⏳ Planned |
 | Stock Dashboard | ⏳ Planned |
 | Jade Frontend | ⏳ Planned |
 

@@ -1,5 +1,5 @@
 
-import Category from "../models/Category.js";
+import { Category } from "../models/index.js";
 import AppError from "../utils/AppError.js";
 
 export const getCategories = async (req, res, next) => {
@@ -20,7 +20,7 @@ export const addCategory = async (req, res, next) => {
         if (!name) return next(new AppError(400, "Please Provide name of Category"));
 
         const addCategory = await Category.create({ name, description });
-        res.status(201).json({ message: `${addCategory.name} Category created.` });
+        res.status(201).json({ message: `${addCategory.name} Category created.`, addCategory });
 
     } catch (error) {
         next(error)
