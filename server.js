@@ -6,6 +6,7 @@ import { connectDB } from './config/db.js'
 import authRoutes from './routes/authRoutes.js'
 import empRoutes from './routes/empRoutes.js'
 import assetRoutes from './routes/assetRoutes.js'
+import CategoryRoutes from './routes/CategoryRoutes.js'
 import { errorHandler } from './middlewares/errorMiddleware.js'
 import dotenv from 'dotenv'
 dotenv.config();
@@ -33,6 +34,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/employee", empRoutes);
 app.use('/api/assets/', assetRoutes);
+app.use('/api/categories/', CategoryRoutes);
 
 app.use(errorHandler);
 app.listen(PORT, () => console.log(`Server is Running on ${PORT}`));
