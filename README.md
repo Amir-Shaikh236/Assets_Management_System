@@ -176,6 +176,7 @@ Current testing stack:
 | Asset History Model | ✅ Completed |
 | Asset Return | ✅ Completed |
 | Asset Scrap | ✅ Completed |
+| Asset LifeCycle | ✅ Completed |
 | Asset History UI | ⏳ Planned |
 | Stock Dashboard | ⏳ Planned |
 | Jade Frontend | ⏳ Planned |

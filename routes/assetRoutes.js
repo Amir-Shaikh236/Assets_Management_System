@@ -1,5 +1,5 @@
 import express from 'express'
-import { getAssets, addAssets, editAssets, deleteAsset, issueAsset, returnAsset, scrap } from "../controllers/assetController.js"
+import { getAssets, addAssets, editAssets, deleteAsset, issueAsset, returnAsset, scrap, getAssetHistory } from "../controllers/assetController.js"
 const router = express.Router();
 
 router.get('/getAssets', getAssets);
@@ -9,5 +9,6 @@ router.delete('/delete/:serialNumber', deleteAsset);
 router.post('/:id/issue', issueAsset);
 router.post('/:id/return', returnAsset);
 router.post('/:id/scrap', scrap);
+router.get('/:id/getAssetHistory', getAssetHistory);
 
 export default router;

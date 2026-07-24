@@ -1,4 +1,4 @@
-import { where } from "sequelize";
+import { Op, where } from "sequelize";
 import { AssestsHistory, Asset, Category, Employee, sequelize } from "../models/index.js";
 import AppError from "../utils/AppError.js";
 
@@ -21,7 +21,15 @@ export const getAssets = async (req, res, next) => {
             filter.status = req.query.status;
         }
 
-        const assets = await Asset.findAll({ where: filter, include: joinTables });
+        const assets = await Asset.findAll({
+            where: {
+                status: {
+                    [Op.ne]: filter.status = 'scrapped'
+                }
+            },
+            include: joinTables
+        });
+
         res.status(200).json(assets)
 
     } catch (error) {
@@ -242,6 +250,49 @@ export const scrap = async (req, res, next) => {
 
     } catch (error) {
         await t.rollback();
+        next(error);
+
+    }
+}
+
+
+export const getAssetHistory = async (req, res, next) => {
+    try {
+        const includeData = [
+            {
+                model: AssestsHistory,
+                as: 'history',
+                order: [['createdAt', 'ASC']],
+
+                include: {
+                    model: Employee,
+                    as: 'employee',
+                    attributes: ['id', 'name', 'email', 'department'],
+                }
+            },
+        ]
+
+        const { id } = req.params;
+
+        const asset = await Asset.findByPk(id, { include: includeData });
+
+        if (!asset) {
+            return next(new AppError(404, `Asset with id: ${id} Not Found`));
+        }
+
+        res.status(200).json({
+            Id: asset.id,
+            value: asset.value,
+            purchasedDate: asset.purchasedDate,
+            make: asset.make,
+            model: asset.model,
+            status: asset.status,
+            history: asset.history
+        });
+
+
+
+    } catch (error) {
         next(error);
 
     }
