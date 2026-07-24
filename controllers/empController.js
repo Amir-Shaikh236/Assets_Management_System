@@ -77,14 +77,41 @@ export const deleteEmp = async (req, res, next) => {
     }
 }
 
-export const Emp = async (req, res, next) => {
+export const getEmp = async (req, res, next) => {
     try {
-        const emp = await Employee.findAll({ limit: 10, offset: 0 });
+        const searchQuery = {};
+
+        const { status, search, name, email } = req.query;
+
+        if (status !== undefined) {
+            searchQuery.status = status;
+        }
+
+        if (search) {
+            searchQuery[Op.or] = [
+                { name: { [Op.iLike]: `%${search.trim()}%` } },
+                { email: { [Op.iLike]: `%${search.trim()}%` } }
+            ];
+        }
+
+        if (name && !search) {
+            searchQuery.name = { [Op.iLike]: `%${name.trim()}%` };
+        }
+
+        if (email && !search) {
+            searchQuery.email = { [Op.iLike]: `%${email.trim()}%` };
+        }
+
+        const emp = await Employee.findAll({
+            where: searchQuery,
+            order: [['id', 'ASC']],
+        });
+
         res.status(200).json({ emp });
 
     } catch (error) {
         next(error);
 
     }
-}
+};
 

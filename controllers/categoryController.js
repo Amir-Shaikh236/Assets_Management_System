@@ -1,10 +1,24 @@
 
+import { Op } from "sequelize";
 import { Category } from "../models/index.js";
 import AppError from "../utils/AppError.js";
 
 export const getCategories = async (req, res, next) => {
     try {
-        const categories = await Category.findAll();
+
+        const searchQuery = {};
+
+        const { name, search } = req.query;
+
+        if (search) {
+            searchQuery.name = { [Op.iLike]: `%${search.trim()}%` }
+        }
+
+        if (name && !search) {
+            searchQuery.name = { [Op.iLike]: `%${name.trim()}%` }
+        }
+
+        const categories = await Category.findAll({ where: searchQuery });
         res.status(200).json(categories);
 
     } catch (error) {

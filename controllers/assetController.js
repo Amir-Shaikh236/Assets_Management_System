@@ -15,18 +15,41 @@ export const getAssets = async (req, res, next) => {
             }
         ]
 
-        let filter = {};
+        let searchQuery = {};
 
-        if (req.query?.status) {
-            filter.status = req.query.status;
+        const { search, serialNumber, id, make, model, status } = req.query;
+
+        if (search) {
+            searchQuery[Op.or] = [
+                { make: { [Op.iLike]: `%${search.trim()}%` } },
+                { model: { [Op.iLike]: `%${search.trim()}%` } }
+            ]
+        }
+
+        if (make && !search) {
+            searchQuery.make = { [Op.iLike]: `%${make.trim()}%` }
+        }
+
+        if (model && !search) {
+            searchQuery.model = { [Op.iLike]: `%${model.trim()}%` }
+        }
+
+        if (id && !search) {
+            searchQuery.id = id;
+        }
+
+        if (serialNumber && !search) {
+            searchQuery.serialNumber = { [Op.iLike]: `%${serialNumber.trim()}%` }
+        }
+
+        if (status && !search) {
+            searchQuery.status = status;
+        } else {
+            searchQuery.status = { [Op.ne]: 'scrapped' };
         }
 
         const assets = await Asset.findAll({
-            where: {
-                status: {
-                    [Op.ne]: filter.status = 'scrapped'
-                }
-            },
+            where: searchQuery,
             include: joinTables
         });
 
@@ -289,8 +312,6 @@ export const getAssetHistory = async (req, res, next) => {
             status: asset.status,
             history: asset.history
         });
-
-
 
     } catch (error) {
         next(error);
