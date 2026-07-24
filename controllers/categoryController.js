@@ -10,12 +10,10 @@ export const getCategories = async (req, res, next) => {
 
         const { name, search } = req.query;
 
-        if (search) {
-            searchQuery.name = { [Op.iLike]: `%${search.trim()}%` }
-        }
+        const searchTerm = name || search;
 
-        if (name && !search) {
-            searchQuery.name = { [Op.iLike]: `%${name.trim()}%` }
+        if (searchTerm) {
+            searchQuery.name = { [Op.iLike]: `%${searchTerm.trim()}%` }
         }
 
         const categories = await Category.findAll({ where: searchQuery });

@@ -1,8 +1,9 @@
 import express from 'express'
-import { getAssets, addAssets, editAssets, deleteAsset, issueAsset, returnAsset, scrap, getAssetHistory } from "../controllers/assetController.js"
+import { getAssets, addAssets, editAssets, deleteAsset, issueAsset, returnAsset, scrap, getAssetHistory, getStockView } from "../controllers/assetController.js"
 const router = express.Router();
 
 router.get('/getAssets', getAssets);
+router.get('/stockView', getStockView);
 router.post('/addAssets', addAssets);
 router.put('/update/:serialNumber', editAssets);
 router.delete('/delete/:serialNumber', deleteAsset);

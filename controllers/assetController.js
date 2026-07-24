@@ -1,4 +1,4 @@
-import { Op, where } from "sequelize";
+import { NUMBER, Op, where } from "sequelize";
 import { AssestsHistory, Asset, Category, Employee, sequelize } from "../models/index.js";
 import AppError from "../utils/AppError.js";
 
@@ -133,9 +133,7 @@ export const deleteAsset = async (req, res, next) => {
     }
 }
 
-
 // Issued Asset
-
 export const issueAsset = async (req, res, next) => {
 
     const t = await sequelize.transaction();
@@ -180,7 +178,6 @@ export const issueAsset = async (req, res, next) => {
 
     }
 };
-
 
 export const returnAsset = async (req, res, next) => {
     const t = await sequelize.transaction();
@@ -312,6 +309,52 @@ export const getAssetHistory = async (req, res, next) => {
             status: asset.status,
             history: asset.history
         });
+
+    } catch (error) {
+        next(error);
+
+    }
+}
+
+export const getStockView = async (req, res, next) => {
+    try {
+        const stockByBranch = await Asset.findAll({
+            attributes: [
+                'branch',
+                [sequelize.fn('COUNT', sequelize.col('id')), 'totalAssets'],
+                [sequelize.fn('SUM', sequelize.col('value')), 'branchValuation'],
+            ],
+            where: {
+                status: {
+                    [Op.ne]: 'scrapped'
+                }
+            },
+            group: ['branch'],
+            order: [['branch', 'ASC']],
+            raw: true
+        });
+
+        const totalValuation = stockByBranch.reduce((acc, currentBranch) => {
+            const branchvalue = Number(currentBranch.branchValuation) || 0;
+            return acc + branchvalue;
+        }, 0);
+
+
+        const grandTotalAssets = stockByBranch.reduce((acc, currentBranch) => {
+            const branchAsset = Number(currentBranch.totalAssets) || 0;
+            return acc + branchAsset;
+        }, 0);
+
+        res.status(200).json({
+            status: 'success',
+            summary: {
+                totalBranches: stockByBranch.length,
+                grandTotalAssets,
+                totalValuation: totalValuation.toFixed(2)
+            },
+            data: stockByBranch
+        });
+
 
     } catch (error) {
         next(error);

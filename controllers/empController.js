@@ -114,4 +114,3 @@ export const getEmp = async (req, res, next) => {
 
     }
 };
-
