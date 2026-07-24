@@ -174,7 +174,7 @@ Current testing stack:
 | Database Associations | ✅ Completed |
 | Asset Issue Logic | ✅ Completed |
 | Asset History Model | ✅ Completed |
-| Asset Return | 🚧 In Progress |
+| Asset Return | ✅ Completed |
 | Asset Scrap | ⏳ Planned |
 | Asset History UI | ⏳ Planned |
 | Stock Dashboard | ⏳ Planned |

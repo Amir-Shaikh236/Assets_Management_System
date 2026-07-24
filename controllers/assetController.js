@@ -1,3 +1,4 @@
+import { where } from "sequelize";
 import { AssestsHistory, Asset, Category, Employee, sequelize } from "../models/index.js";
 import AppError from "../utils/AppError.js";
 
@@ -104,7 +105,7 @@ export const deleteAsset = async (req, res, next) => {
 
 // Issued Asset
 
-export const IssuedAsset = async (req, res, next) => {
+export const issueAsset = async (req, res, next) => {
 
     const t = await sequelize.transaction();
 
@@ -136,7 +137,7 @@ export const IssuedAsset = async (req, res, next) => {
             assetId: asset.id,
             empId: empId,
             reason: null,
-        }, { transaction: 1 });
+        }, { transaction: t });
 
         await t.commit();
 
@@ -148,3 +149,51 @@ export const IssuedAsset = async (req, res, next) => {
 
     }
 };
+
+
+export const returnAsset = async (req, res, next) => {
+    const t = await sequelize.transaction();
+
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+
+        const asset = await Asset.findByPk(id);
+        if (!asset) {
+            await t.rollback();
+            return next(new AppError(404, "Asset Not Found"))
+        }
+
+        if (asset.status !== 'issued') {
+            await t.rollback();
+            return next(new AppError(409, "Asset cannot be returned because it is currently in_stock"));
+        }
+
+        if (!reason) {
+            await t.rollback();
+            return next(new AppError(400, "Please Provide your Reason of Returning Asset"));
+        }
+
+
+        await AssestsHistory.create({
+            action: 'returned',
+            assetId: asset.id,
+            empId: asset.currentEmpId,
+            reason: reason,
+        }, { transaction: t });
+
+        await asset.update({
+            status: 'in_stock',
+            currentEmpId: null,
+        }, { transaction: t });
+
+        await t.commit();
+
+        res.status(200).json({ message: `Asset move to ${asset.status}` });
+
+    } catch (error) {
+        await t.rollback();
+        next(error)
+
+    }
+}

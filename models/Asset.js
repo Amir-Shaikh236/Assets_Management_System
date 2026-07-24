@@ -41,7 +41,7 @@ const Asset = sequelize.define('Asset', {
     },
 
     status: {
-        type: DataTypes.ENUM("in_stock", "issued", "scrapped", "returned"),
+        type: DataTypes.ENUM("in_stock", "issued", "scrapped"),
         defaultValue: 'in_stock',
         allowNull: false,
         validate: {
