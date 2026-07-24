@@ -197,3 +197,52 @@ export const returnAsset = async (req, res, next) => {
 
     }
 }
+
+
+export const scrap = async (req, res, next) => {
+
+    const t = await sequelize.transaction();
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+
+        const asset = await Asset.findByPk(id)
+        if (!asset) {
+            await t.rollback();
+            return next(new AppError(404, "Asset Not Found"))
+        }
+
+        if (asset.status === 'scrapped') {
+            await t.rollback();
+            return next(new AppError(409, "The Asset is already been scrapped"));
+        }
+
+        if (!reason) {
+            await t.rollback();
+            return next(new AppError(400, "Please Provide your Reason for Scrapping an Asset"));
+        }
+
+
+        await AssestsHistory.create({
+            action: 'scrapped',
+            assetId: asset.id,
+            empId: asset.currentEmpId,
+            reason: reason
+
+        }, { transaction: t });
+
+        await asset.update({
+            status: 'scrapped',
+            currentEmpId: null,
+        }, { transaction: t })
+
+        await t.commit();
+
+        res.status(200).json({ message: `Asset has been scrapped`, asset });
+
+    } catch (error) {
+        await t.rollback();
+        next(error);
+
+    }
+}
