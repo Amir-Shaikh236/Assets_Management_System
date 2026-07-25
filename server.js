@@ -7,21 +7,24 @@ import authRoutes from './routes/authRoutes.js'
 import empRoutes from './routes/empRoutes.js'
 import assetRoutes from './routes/assetRoutes.js'
 import CategoryRoutes from './routes/CategoryRoutes.js'
+import viewRoutes from './routes/viewRoutes.js'
 import { errorHandler } from './middlewares/errorMiddleware.js'
 import dotenv from 'dotenv'
 dotenv.config();
 
 const app = express();
+app.set('view engine', 'jade')
+app.set('views', './views')
 
 app.use(cors({
-  origin: `${process.env.FRONTEND_URL}`,
+  origin: `${process.env.Backend_URL}`,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }))
 
 app.use(express.json());
-app.use(helmet());
+// app.use(helmet());
 app.use(cookieParser());
 connectDB();
 
@@ -35,6 +38,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/employee", empRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/categories', CategoryRoutes);
+app.use('/', viewRoutes)
 
 app.use(errorHandler);
 app.listen(PORT, () => console.log(`Server is Running on ${PORT}`));

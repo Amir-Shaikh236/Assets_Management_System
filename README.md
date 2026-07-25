@@ -179,8 +179,8 @@ Current testing stack:
 | Asset LifeCycle | ✅ Completed |
 | search/filter for assets, category and employee | ✅ Completed |
 | Stock View | ✅ Completed |
+| Stock Dashboard | ✅ Completed |
 | Jade Frontend | ⏳ Planned |
-| Stock Dashboard | ⏳ Planned |
 | Asset History UI | ⏳ Planned |
 
 ---
