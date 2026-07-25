@@ -6,9 +6,11 @@ router.get('/assets/stockView', (req, res) => {
     res.render('assets/stockView');
 });
 
-
-router.get('/', (req, res) => {
-    res.redirect('/assets/stockView');
+//Asset Management
+router.get('/assets', (req, res) => {
+    res.render('assets/index', {
+        title: 'Asset Master'
+    });
 });
 
 export default router;

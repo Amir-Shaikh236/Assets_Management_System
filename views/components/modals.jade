@@ -1,0 +1,38 @@
+
+mixin formModal(modalId, title, formId, submitBtnText="Save Changes")
+    div.modal.fade(id=modalId, tabindex="-1", aria-lablledby=`${modalId}Label`, aria-hidden="true")
+        div.modal-dialog.modal-dialog-centered.modal-lg
+            div.modal-content
+                div.modal-header
+                    h5.modal-title(id=`${modalId}Label`)= title 
+                    button.btn-close(type="button", data-bs-dismiss="modal" aria-label="Close")
+
+                form(id=formId, novalidate)
+                    div.model-body
+                        if block
+                            block
+                        else    
+                            p.text-muted.small No form field provided 
+                    div.modal-footer
+                        button.btn.btn-outline-secondary.btn-sm(type='button', data-bs-dimiss="modal") Cancel 
+                        button.btn.btn-primary.btn-sm(type="submit")= submitBtnText
+
+
+mixin confirmModal(modalId, title, message, confirmBtnText="Confirm Action", connfirmBtnClass="btn-danger", confirmActionId=null)
+    div.modal.fade(id=modalId, tabindex="-1", aria-lablledby=`${modalId}Label`, aria-hidden="true")
+        div.modal-dialog.modal-dialog-centered.modal-lg
+            div.modal-content
+                div.modal-header
+                    h5.modal-title(id=`${modalId}Label`) | #{title}
+                    button.btn-close(type="button", data-bs-dismiss="modal" aria-label="Close")
+
+                div.model-body
+                    p.mb-0.text-secondary= message
+                    if block
+                        div.mt-3
+                            block 
+
+                div.modal-footer
+                    button.btn.btn-outline-secondary.btn-sm(type='button', data-bs-dimiss="modal") Cancel 
+                    button .btn.btn-sm(type="buttin", class=connfirmBtnClass, id=confirmActionId)= confirmBtnText
+

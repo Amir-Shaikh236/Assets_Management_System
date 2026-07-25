@@ -4,8 +4,8 @@ block content
   div.d-flex.justify-content-between.align-items-center.mb-4
     div
       h3.fw-bold.text-dark.mb-1 Stock View & Valuation
-      p.text-secondary.small.mb-0 Real-time inventory overview grouped by branch (excluding scrapped hardware)
-    button.btn.btn-outline-primary.btn-sm(onclick="reloadTable()")
+      p.text-secondary.small.mb-0 inventory overview grouped by branch (excluding scrapped hardware)
+    button.btn.btn-outline-primary.btn-sm(onclick="reloadTable()")  
       i.bi.bi-arrow-clockwise.me-1
       | Refresh Data
 
@@ -59,7 +59,7 @@ block scripts
               $('#cardTotalBranches').text(json.summary.totalBranches || 0);
               $('#cardTotalAssets, #footerTotalAssets').text(json.summary.grandTotalAssets || 0);
               
-              var formattedValuation = '₹ ' + Number(json.summary.totalValuation || 0).toLocaleString('en-IN', {
+              var formattedValuation = 'Rs. ' + Number(json.summary.totalValuation || 0).toLocaleString('en-IN', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
               });
