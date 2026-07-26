@@ -25,11 +25,15 @@ block content
                 tbody 
 
     +formModal('addAssetModal', 'Create New Asset', 'assetForm', 'Save Asset')
+        input#originalAssetId(type="hidden", name="originalAssetId", value="")
         input#originalSerialNumber(type="hidden", name="originalSerialNumber", value="")
         div.row.g-3.pt-1
             div.col-md-6
                 label.form-label.small.fw-semibold.text-secondary.mb-1 Serial Number
                 input.form-control.form-control-sm.shadow-none(type="text", name="serialNumber", required)
+            div.col-md-6
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Category Name
+                input.form-control.form-control-sm.shadow-none(type="text", name="Cname", required)
             div.col-md-6
                 label.form-label.small.fw-semibold.text-secondary.mb-1 Make
                 input.form-control.form-control-sm(type="text", name="make", required)
@@ -51,20 +55,58 @@ block content
                     option(value="in_stock", selected) In_Stock 
                     option(value="issued") Issued 
                     option(value="scrapped") Scrapped
+                    
 
+    +formModal('issueAssetModal', 'Issue Asset to Employee', 'issueAssetForm', 'Confirm Issuance')
+        input#issueAssetId(type="hidden", name="assetId", value="")
+        div.row.g-3.pt-1
+            div.col-md-12
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Employee ID or Email
+                input#empSearchInput.form-control.form-control-sm.shadow-none(type="text", list="empDatalist", placeholder="Start typing for emp id/email....")
+                datalist#empDatalist
+
+            div.col-md-12
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Reason
+                textarea#issueRemarks.form-control.form-control-sm.shadow-none(name="remarks", rows="3", placeholder="e.g., Assigned for remote development work...")
+
+
+    +formModal('returnAssetModal', 'Return Asset', 'returnAssetForm', 'Confirm Return')
+        input#returnAssetId(type="hidden", name="assetId", value="")
+        div.row.g-3.pt-1
+            div.col-md-12
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Asset Serial Number
+                input#returnAssetSerialNumber.form-control.form-control-sm.shadow-none(type="text", readonly)
+            div.col-md-12
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Assigned Employee
+                input#returnEmployeeDisplay.form-control.form-control-sm.shadow-none(type="text", readonly)
+            div.col-md-12
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Reason for Return
+                textarea#returnReason.form-control.form-control-sm.shadow-none(name="reason", rows="3", placeholder="e.g., Asset returned for replacement or repair")
+
+    +confirmModal('scrapAssetConfirmModal', 'Confirm Scrap', 'This action will mark the selected asset as scrapped and cannot be undone.', 'Confirm Scrap', 'btn-danger', 'confirmScrapAssetBtn')
+        div.mt-2
+            p.mb-1.fw-semibold.text-dark Asset Serial Number
+            input#scrapAssetSerialNumber.form-control.form-control-sm.shadow-none(type="text", readonly)
+            p.mb-1.mt-3.fw-semibold.text-dark Reason
+            textarea#scrapReason.form-control.form-control-sm.shadow-none(rows="3", placeholder="Provide scrap reason")
 
 block scripts 
     script. 
         var assetTable;
+        var pendingScrapAssetId = null;
+        var pendingScrapSerialNumber = null;
 
         var API_GET_URL = '/api/assets/getAssets'
         var API_CREATE_URL = '/api/assets/addAssets'
         var API_UPDATE_URL = '/api/assets/update/'
+        var API_ISSUE_URL = '/api/assets/issue/'
+        var API_RETURN_URL = '/api/assets/return/'
+        var API_SCRAP_URL = '/api/assets/scrap/'
         
         $(document).ready(function(){
             assetTable = $('#assetTable').DataTable({
                 ajax:{
-                    url: '/api/assets/getAssets',
+                    url: API_GET_URL,
                     type: 'GET',
                     dataSrc: function(json){
                         if(Array.isArray(json)){
@@ -148,9 +190,18 @@ block scripts
                     {
                         render: function(data, type, row){
                             var assetId = row.id || row.Id || '';
+                            var statusStr = (row.status || '').toLowerCase();
                             var editBtn = '<button class="btn btn-sm btn-light border shadow-sm btn-edit text-primary fw-medium px-3 py-1 transition-all" title="Edit Asset"><i class="bi bi-pencil-square me-1"></i> Edit </button>';
-                            var historyBtn = '<a href="/getAssetHistory?id=' + assetId + '" class="btn btn-sm btn-light border shadow-sm text-info fw-medium px-3 py-1 transition-all" title="View LifeCycle History"><i class="bi bi-clock-history me-1"></i> History </a>';
-                            return '<div class="d-flex justify-content-end">' + editBtn + historyBtn + '</div>';
+                            var issueBtn = '';
+                            var returnBtn = '';
+
+                            if (statusStr === 'in_stock') {
+                                issueBtn = '<button class="btn btn-sm btn-light border shadow-sm btn-issue text-warning fw-medium px-2 py-1 transition-all" title="Issue Asset"><i class="bi bi-person-check"></i></button>';
+                            } else if (statusStr === 'issued') {
+                                returnBtn = '<button class="btn btn-sm btn-light border shadow-sm btn-return text-warning fw-medium px-2 py-1 transition-all" title="Return Asset"><i class="bi bi-arrow-return-left"></i></button>';
+                            }
+
+                            return '<div class="d-flex justify-content-end gap-2">' + editBtn + issueBtn + returnBtn + '</div>';
                         }
                     }
                 ],
@@ -167,6 +218,7 @@ block scripts
                 var rowData = assetTable.row(tr).data();
 
                 if(rowData){
+                    $('#originalAssetId').val(rowData.id || rowData.Id || '');
                     $('#originalSerialNumber').val(rowData.serialNumber)
 
                     $('input[name="serialNumber"]').val(rowData.serialNumber);
@@ -174,6 +226,7 @@ block scripts
                     $('input[name="model"]').val(rowData.model)
                     $('input[name="value"]').val(rowData.value)
                     $('input[name="branch"]').val(rowData.branch)
+                    $('input[name="Cid"]').val(rowData.categoryId)
 
                     if(rowData.purchasedDate){
                         var d = new Date(rowData.purchasedDate)
@@ -193,6 +246,79 @@ block scripts
                 }
             });
 
+            $('#assetTable').on('click', '.btn-return', function(){
+                var tr = $(this).closest('tr');
+                var rowData = assetTable.row(tr).data();
+                var assetId = rowData && (rowData.id || rowData.Id || '');
+
+                if(assetId){    
+                    $('#returnAssetId').val(assetId);
+                    $('#returnAssetSerialNumber').val(rowData.serialNumber || '');
+
+                    var employeeName = rowData.currentHolder && rowData.currentHolder.name ? rowData.currentHolder.name : '';
+                    var employeeEmail = rowData.currentHolder && rowData.currentHolder.email ? rowData.currentHolder.email : '';
+                    var employeeDisplay = employeeName || employeeEmail || 'No employee assigned';
+
+                    if(employeeName && employeeEmail){
+                        employeeDisplay = employeeName + ' (' + employeeEmail + ')';
+                    }
+
+                    $('#returnEmployeeDisplay').val(employeeDisplay);
+                    $('#returnAssetModalLabel').text('Return Asset - ' + (rowData.serialNumber || 'Asset'));
+                    $('#returnAssetModal').modal('show');
+                }
+            });
+
+            $('#returnAssetForm').on('submit', function(e){
+                e.preventDefault();
+
+                var assetId = $('#returnAssetId').val();
+                var reason = $('#returnReason').val().trim();
+
+                if(!assetId){
+                    alert('Asset ID is missing.');
+                    return;
+                }
+
+                if(!reason){
+                    alert('Please provide a reason for returning the asset.');
+                    return;
+                }
+
+                var submitBtn = $(this).find('button[type="submit"]');
+                var originalBtnText = submitBtn.text();
+                submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Processing...');
+
+                $.ajax({
+                    url: API_RETURN_URL + encodeURIComponent(assetId),
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ reason: reason }),
+                    success: function(response){
+                        $('#returnAssetModal').modal('hide');
+                        $('#returnAssetForm')[0].reset();
+                        if(assetTable){
+                            assetTable.ajax.reload(null, false);
+                        }
+                    },
+                    error: function(xhr){
+                        var errMsg = 'Unable to return the asset';
+                        if(xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)){
+                            errMsg = xhr.responseJSON.message || xhr.responseJSON.error;
+                        }
+                        alert('Error: ' + errMsg);
+                    },
+                    complete: function(){
+                        submitBtn.prop('disabled', false).text(originalBtnText);
+                    }
+                });
+            });
+
+            $('#returnAssetModal').on('hidden.bs.modal', function(){
+                $('#returnAssetForm')[0].reset();
+                $('#returnAssetId').val('');
+                $('#returnAssetModalLabel').text('Return Asset');
+            });
 
             $('#addAssetModal').on('hidden.bs.modal', function(){
                 $('#assetForm')[0].reset();
@@ -200,7 +326,6 @@ block scripts
                 $('#addAssetModalLabel').text('Create New Asset')
                 $('#assetForm button[type="submit"]').text('Save Asset');
             });
-
 
             $('#assetForm').on('submit', function(e){
                 e.preventDefault();
@@ -211,13 +336,34 @@ block scripts
                 var formatDataList = $(this).serializeArray();
                 var payload = {};
                 $.each(formatDataList, function(i, field){
-                    if(field.name !== 'serialNumber'){
-                        payload[field.name] = field.value;
+                    if(field.name === 'originalSerialNumber'){
+                        return; 
                     }
-                });
+
+                    if(field.name === 'Cname'){
+                        payload.categoryName = field.value;
+                        return;
+                    }
+
+                    if(field.name === 'serialNumber'){
+                        payload.serialNumber = field.value;
+                        return;
+                    }
+
+                    payload[field.name] = field.value;
+                }); 
 
                 if(payload.value){
                     payload.value = Number(payload.value)
+                }
+
+                var isScrap = (payload.status || '').toLowerCase() === 'scrapped';
+                if (isScrap && isUpdate) {
+                    pendingScrapAssetId = $('#originalAssetId').val();
+                    pendingScrapSerialNumber = payload.serialNumber || serialNumber;
+                    $('#scrapAssetSerialNumber').val(pendingScrapSerialNumber);
+                    $('#scrapAssetConfirmModal').modal('show');
+                    return;
                 }
 
                 var requestUrl = isUpdate ? (API_UPDATE_URL + encodeURIComponent(serialNumber)) : API_CREATE_URL;
@@ -253,4 +399,120 @@ block scripts
                 });
 
             });
+
+            $('#confirmScrapAssetBtn').on('click', function(){
+                var reason = $('#scrapReason').val().trim();
+                var submitBtn = $('#assetForm button[type="submit"]');
+                var originalBtnText = submitBtn.text();
+
+                if(!pendingScrapAssetId){
+                    $('#scrapAssetConfirmModal').modal('hide');
+                    return;
+                }
+
+                submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Scrapping...');
+
+                $.ajax({
+                    url: API_SCRAP_URL + encodeURIComponent(pendingScrapAssetId),
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ reason: reason || 'Scrapped from asset edit form' }),
+                    success: function(response){
+                        $('#scrapAssetConfirmModal').modal('hide');
+                        $('#addAssetModal').modal('hide');
+                        $('#assetForm')[0].reset();
+                        $('#scrapReason').val('');
+                        if(assetTable){
+                            assetTable.ajax.reload(null, false);
+                        }
+                    },
+                    error: function(xhr){
+                        var errMsg = 'Failed to scrap asset';
+                        if(xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)){
+                            errMsg = xhr.responseJSON.message || xhr.responseJSON.error;
+                        }
+                        alert('Error: ' + errMsg);
+                    },
+                    complete: function(){
+                        submitBtn.prop('disabled', false).text(originalBtnText);
+                        pendingScrapAssetId = null;
+                        pendingScrapSerialNumber = null;
+                    }
+                });
+            });
+
+            $('#assetTable').on('click', '.btn-issue', function(){
+                var tr = $(this).closest('tr');
+                var rowData = assetTable.row(tr).data();
+                var assetId = rowData.id || rowData.Id;
+
+                if(assetId){
+                    $('#issueAssetId').val(assetId);
+                    $('#issueAssetModal').modal('show');
+                }
+            });
+
+            $('#issueAssetForm').on('submit', function(e) {
+                e.preventDefault();
+                var assetId = $('#issueAssetId').val();
+                var employeeInput = $('#empSearchInput').val().trim();
+                var remarks = $('#issueRemarks').val();
+
+                if(!assetId || !employeeInput){
+                    alert('Please enter a valid employee ID or email.');
+                    return;
+                }
+
+                var payload = {
+                    employeeEmail: employeeInput,
+                    reason: remarks || 'Issued via portal'
+                };
+
+                var submitBtn = $(this).find('button[type="submit"]');
+                var originalBtnText = submitBtn.text();
+                submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Issuing...');
+
+                $.ajax({
+                    url: API_ISSUE_URL + assetId,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function(response){
+                        $('#issueAssetModal').modal('hide');
+                        $('#issueAssetForm')[0].reset();
+                        if(assetTable){
+                            assetTable.ajax.reload(null, false);
+                        }
+                    },
+                    error: function(xhr){
+                        var errMsg = 'Failed to issue asset';
+                        if(xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)){
+                            errMsg = xhr.responseJSON.message || xhr.responseJSON.error;
+                        }
+                        alert('Error: ' + errMsg);
+                    },
+                    complete: function(){
+                        submitBtn.prop('disabled', false).text(originalBtnText);
+                    }
+                });
+            });
+
+            $('#addAssetModal').on('hidden.bs.modal', function(){
+                $('#assetForm')[0].reset();                $('#originalAssetId').val('');                $('#originalSerialNumber').val('');
+                $('#addAssetModalLabel').text('Create New Asset');
+                $('#assetForm button[type="submit"]').text('Save Asset');
+                $('#scrapReason').val('');
+            });
+
+            $('#scrapAssetConfirmModal').on('hidden.bs.modal', function(){
+                $('#scrapReason').val('');
+                pendingScrapAssetId = null;
+                pendingScrapSerialNumber = null;
+            });
+
+            $('#issueAssetModal').on('hidden.bs.modal', function(){
+                $('#issueAssetForm')[0].reset();
+                $('#issueAssetId').val('');
+            });
+            
         });

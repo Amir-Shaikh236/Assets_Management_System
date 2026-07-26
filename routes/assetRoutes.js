@@ -7,9 +7,9 @@ router.get('/stockView', getStockView);
 router.post('/addAssets', addAssets);
 router.put('/update/:serialNumber', editAssets);
 router.delete('/delete/:serialNumber', deleteAsset);
-router.post('/:id/issue', issueAsset);
-router.post('/:id/return', returnAsset);
-router.post('/:id/scrap', scrap);
+router.post('/issue/:id', issueAsset);
+router.post('/return/:id', returnAsset);
+router.post('/scrap/:id', scrap);
 router.get('/getAssetHistory/:id', getAssetHistory);
 
 export default router;

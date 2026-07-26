@@ -1,4 +1,4 @@
-import { NUMBER, Op, where } from "sequelize";
+import { Op, where } from "sequelize";
 import { AssestsHistory, Asset, Category, Employee, sequelize } from "../models/index.js";
 import AppError from "../utils/AppError.js";
 
@@ -43,7 +43,9 @@ export const getAssets = async (req, res, next) => {
         }
 
         if (status && !search) {
-            searchQuery.status = status;
+            if (status !== 'all') {
+                searchQuery.status = status;
+            }
         } else {
             searchQuery.status = { [Op.ne]: 'scrapped' };
         }
@@ -64,12 +66,44 @@ export const getAssets = async (req, res, next) => {
 export const addAssets = async (req, res, next) => {
     try {
 
-        const { serialNumber, make, model, value, branch, purchasedDate, status, categoryId, currentEmpId } = req.body;
+        const { serialNumber, make, model, value, branch, purchasedDate, status, categoryId, categoryName, currentEmpId } = req.body;
         if (!serialNumber || !make || !model || !value || !branch || !purchasedDate || !status) {
             return next(new AppError(400, "Please Provide required details of Assest"));
         }
 
-        const assets = await Asset.create({ serialNumber, make, model, value, branch, purchasedDate, status, categoryId, currentEmpId });
+        let resolvedCategoryId = categoryId || null;
+
+        if (!resolvedCategoryId && categoryName) {
+            const category = await Category.findOne({
+                where: { name: categoryName.trim() }
+            });
+
+            if (!category) {
+                return next(new AppError(404, "Category not found for the provided name"));
+            }
+
+            resolvedCategoryId = category.id;
+        }
+
+        const assets = await Asset.create({
+            serialNumber,
+            make,
+            model,
+            value,
+            branch,
+            purchasedDate,
+            status,
+            categoryId: resolvedCategoryId,
+            currentEmpId
+        });
+
+        await AssestsHistory.create({
+            action: 'in_stock',
+            assetId: assets.id,
+            empId: null,
+            reason: 'Asset added to inventory',
+        });
+
         res.status(201).json(assets);
 
     } catch (error) {
@@ -141,7 +175,7 @@ export const issueAsset = async (req, res, next) => {
     try {
 
         const { id } = req.params;
-        const { empId } = req.body;
+        const { employeeEmail, empId, reason } = req.body;
 
         const asset = await Asset.findByPk(id);
         if (!asset) {
@@ -156,16 +190,36 @@ export const issueAsset = async (req, res, next) => {
 
         }
 
+        let resolvedEmpId = empId || null;
+
+        if (employeeEmail && !resolvedEmpId) {
+            const employee = await Employee.findOne({
+                where: { email: employeeEmail.trim().toLowerCase() }
+            });
+
+            if (!employee) {
+                await t.rollback();
+                return next(new AppError(404, "Employee not found for the provided email"));
+            }
+
+            resolvedEmpId = employee.id;
+        }
+
+        if (!resolvedEmpId) {
+            await t.rollback();
+            return next(new AppError(400, "Please provide a valid employee email or employee id"));
+        }
+
         await asset.update({
             status: 'issued',
-            currentEmpId: empId
+            currentEmpId: resolvedEmpId
         }, { transaction: t });
 
         await AssestsHistory.create({
             action: 'issued',
             assetId: asset.id,
-            empId: empId,
-            reason: null,
+            empId: resolvedEmpId,
+            reason: reason || null,
         }, { transaction: t });
 
         await t.commit();
@@ -184,9 +238,26 @@ export const returnAsset = async (req, res, next) => {
 
     try {
         const { id } = req.params;
-        const { reason } = req.body;
+        const { reason, employeeId } = req.body;
 
-        const asset = await Asset.findByPk(id);
+        let asset = null;
+
+        if (id && id !== '0') {
+            asset = await Asset.findByPk(id);
+        }
+
+        if (!asset) {
+            const resolvedEmployeeId = employeeId || id;
+            if (resolvedEmployeeId) {
+                asset = await Asset.findOne({
+                    where: {
+                        currentEmpId: resolvedEmployeeId,
+                        status: 'issued'
+                    }
+                });
+            }
+        }
+
         if (!asset) {
             await t.rollback();
             return next(new AppError(404, "Asset Not Found"))
@@ -202,7 +273,6 @@ export const returnAsset = async (req, res, next) => {
             return next(new AppError(400, "Please Provide your Reason of Returning Asset"));
         }
 
-
         await AssestsHistory.create({
             action: 'returned',
             assetId: asset.id,
@@ -217,7 +287,7 @@ export const returnAsset = async (req, res, next) => {
 
         await t.commit();
 
-        res.status(200).json({ message: `Asset move to ${asset.status}` });
+        res.status(200).json({ message: 'Asset returned successfully', asset });
 
     } catch (error) {
         await t.rollback();
@@ -225,7 +295,6 @@ export const returnAsset = async (req, res, next) => {
 
     }
 }
-
 
 export const scrap = async (req, res, next) => {
 
@@ -254,7 +323,7 @@ export const scrap = async (req, res, next) => {
         await AssestsHistory.create({
             action: 'scrapped',
             assetId: asset.id,
-            empId: asset.currentEmpId,
+            empId: asset.currentEmpId || null,
             reason: reason
 
         }, { transaction: t });
@@ -274,7 +343,6 @@ export const scrap = async (req, res, next) => {
 
     }
 }
-
 
 export const getAssetHistory = async (req, res, next) => {
     try {

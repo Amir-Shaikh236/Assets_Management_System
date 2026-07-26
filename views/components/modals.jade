@@ -28,9 +28,8 @@ mixin confirmModal(modalId, title, message, confirmBtnText="Confirm Action", con
 
                 div.modal-body.p-4
                     p.mb-0.text-secondary= message
-                    if block
-                        div.mt-3
-                            block 
+                    div.mt-3
+                        block
 
                 div.modal-footer.px-4.py-3.bg-light.border-top-0
                     button.btn.btn-outline-secondary.btn-sm.px-4.py-2.fw-medium.shadow-sm(type='button', data-bs-dismiss="modal") Cancel 

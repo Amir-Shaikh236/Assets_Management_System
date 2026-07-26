@@ -104,26 +104,32 @@ block scripts
                     },
                     {
                         data: 'employee',
-                        render: function(data){
-                            if(data && data.name){
-                                return '<span class="fw-medium text-dark">' + data.name + ' <small class="text-muted">(' + (data.email || '') + ')</small></span>';
+                        render: function(data, type, row){
+                            var employee = data || row.employee || null;
+                            if(employee && (employee.name || employee.email)){
+                                return '<span class="fw-medium text-dark">' + (employee.name || 'Unknown Employee') + ' <small class="text-muted">(' + (employee.email || '') + ')</small></span>';
                             }
                             return '<span class="text-muted fst-italic">N/A (Warehouse)</span>';
                         }
                     },
                     {
                         data: 'employee',
-                        render: function(data){
-                            if(data && data.department){
-                                return '<span class="badge bg-light text-dark border">' + data.department + '</span>';
+                        render: function(data, type, row){
+                            var employee = data || row.employee || null;
+                            if(employee && employee.department){
+                                return '<span class="badge bg-light text-dark border">' + employee.department + '</span>';
                             }
                             return '<span class="text-muted">-</span>';
                         }
                     },
                     {
                         data: 'reason',
-                        render: function(data){
-                            return '<span class="text-secondary">' + (data || '<i class="text-muted fst-italic">No reason recorded</i>') + '</span>';
+                        render: function(data, type, row){
+                            var reasonValue = data || row.reason;
+                            if(reasonValue){
+                                return '<span class="text-secondary">' + reasonValue + '</span>';
+                            }
+                            return '<span class="text-muted fst-italic">No reason recorded</span>';
                         }
                     }
                 ],
@@ -135,7 +141,7 @@ block scripts
             });
 
             $.ajax({
-                url: API_GET_ALL,
+                url: API_GET_ALL + '?status=all',
                 type: 'GET',
                 success: function(response){
                     var list = Array.isArray(response) ? response : (response.assets || response.data || []);
@@ -187,8 +193,6 @@ block scripts
                     url: API_GET_HISTORY + assetId,
                     type: 'GET',
                     success: function(response){
-                        console.log('Full Response: ', response)
-                        console.log('Response History: ', response.history);
                         $('#statusIndicator').removeClass('bg-light text-secondary bg-danger-subtle text-danger').addClass('bg-success-subtle text-success-emphasis').text('Lifecycle Attached');
                         
                         $('#summaryCard').removeClass('d-none');
@@ -204,8 +208,13 @@ block scripts
 
                         historyTable.clear();
 
+                        var rows = [];
                         if(response.history && Array.isArray(response.history)){
-                            historyTable.rows.add(response.history);
+                            rows = response.history;
+                        }
+
+                        if(rows.length > 0){
+                            historyTable.rows.add(rows);
                         }
 
                         historyTable.draw();

@@ -180,8 +180,8 @@ Current testing stack:
 | search/filter for assets, category and employee | ✅ Completed |
 | Stock View | ✅ Completed |
 | Stock Dashboard | ✅ Completed |
-| Jade Frontend | ⏳ Planned |
-| Asset History UI | ⏳ Planned |
+| Jade Frontend | ✅ Completed|
+| Asset History UI | ✅ Completed |
 
 ---
 
