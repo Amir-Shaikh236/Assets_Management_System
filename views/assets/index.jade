@@ -19,7 +19,7 @@ block content
                         th.text-center Model 
                         th.text-center Value
                         th.text-center Branch 
-                        th.text-center Purchased Date
+                        th.text-left Purchased
                         th.text-center Status
                         th.text-right Actions
                 tbody 
@@ -134,8 +134,9 @@ block scripts
 
                     {
                         data: 'model',
+                        className: 'text-center',
                         render: function(data){
-                            return '<span class="text-dark fw-bold text-center">' + data + '</span>'
+                            return '<span class="text-dark fw-semibold">' + data + '</span>'
                         }
                     },
 
@@ -143,7 +144,7 @@ block scripts
                         data: 'value',
                         className: 'text-center font-monospace',
                         render: function(data){
-                            return '<span class="fw-semibold text-success-emphasis text-center"> Rs. ' + data + '</span>'
+                            return '<span class="fw-semibold text-success-emphasis text-center"> Rs.' + data + '</span>'
                         }
                     },
 

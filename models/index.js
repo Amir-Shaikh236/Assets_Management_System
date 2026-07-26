@@ -9,7 +9,7 @@ import Employee from "./Employee.js";
 Category.hasMany(Asset, {
     foreignKey: 'categoryId',
     as: 'assets',
-    // onDelete: 'RESTRICT', // If someone tries to delete a Category from the database, block the deletion if there are assets linked to it.
+    onDelete: 'RESTRICT', // If someone tries to delete a Category from the database, block the deletion if there are assets linked to it.
     onUpdate: 'CASCADE'  // If the Category's ID number changes, automatically update the sticky notes on all the laptops to match the new number.
 });
 
