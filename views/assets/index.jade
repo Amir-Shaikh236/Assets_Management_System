@@ -10,50 +10,56 @@ block content
         button.btn.btn-primary.btn-sm(type="button", data-bs-toggle="modal", data-bs-target="#addAssetModal") + Add New Asset 
     
     div.card.border-0.shodow-md
-        div.card-body
-            table#assetTable 
-                thead 
+        div.card-body.p-4
+            table#assetTable.table.table-striped.table-hover.w-100
+                thead.table-light
                     tr 
-                        th Sr. No.
-                        th Make 
-                        th Model 
-                        th Value
-                        th Branch 
-                        th Purchased Date
-                        th Status
+                        th.text-left Sr. No.
+                        th.text-left Make 
+                        th.text-center Model 
+                        th.text-center Value
+                        th.text-center Branch 
+                        th.text-center Purchased Date
+                        th.text-center Status
+                        th.text-right Actions
                 tbody 
+
     +formModal('addAssetModal', 'Create New Asset', 'assetForm', 'Save Asset')
-        div.row.g-3
+        input#originalSerialNumber(type="hidden", name="originalSerialNumber", value="")
+        div.row.g-3.pt-1
             div.col-md-6
-                label.form-label Serial Number
-                input.form-control.form-control-sm(type="text", name="serialNumber", required)
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Serial Number
+                input.form-control.form-control-sm.shadow-none(type="text", name="serialNumber", required)
             div.col-md-6
-                labe.form-label.small Make
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Make
                 input.form-control.form-control-sm(type="text", name="make", required)
             div.col-md-6
-                label.form-label.small.fw-semibold Model 
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Model 
                 input.form-control.form-control-sm(type="text", name="model", required)
             div.col-md-6
-                label.form-label.small.fw-semibold Value (Rs)
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Value (Rs)
                 input.form-control.form-control-sm(type="text", name="value", required)
             div.col-md-6
-                label.form-label.small.fw-semibold Branch 
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Branch 
                 input.form-control.form-control-sm(type="text", name="branch", required)
             div.col-md-6
-                label.form-label.small.fw-semibold Purchased Date
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Purchased Date
                 input.form-control.form-control-sm(type="date", name="purchasedDate", required)
             div.col-md-12
-                label.form-label.small.fw-semibold status
-                select.form-select.form-select-sm(name="status", required)
-                    option(value="in_stock", select) In_Stock 
-                    option(value="issued", select) Issued 
-                    option(value="scrapped", select) Scrapped
+                label.form-label.small.fw-semibold.text-secondary.mb-1 status
+                select.form-select.form-select-sm.shadow-none(name="status", required)
+                    option(value="in_stock", selected) In_Stock 
+                    option(value="issued") Issued 
+                    option(value="scrapped") Scrapped
 
-                
 
 block scripts 
     script. 
         var assetTable;
+
+        var API_GET_URL = '/api/assets/getAssets'
+        var API_CREATE_URL = '/api/assets/addAssets'
+        var API_UPDATE_URL = '/api/assets/update/'
         
         $(document).ready(function(){
             assetTable = $('#assetTable').DataTable({
@@ -73,49 +79,75 @@ block scripts
                     {
                         data: 'serialNumber',
                         render: function(data){
-                            return '<span>' + data + '</span>';
+                            return '<span class="badge bg-light text-dark border font-monospace px-2 py-1 shadow-sm">' + (data || 'N/A') + '</span>';
                         }
                     },
 
                     {
                         data: 'make',
                         render: function(data){
-                            return '<span>' + data + '</span>'
+                            return '<span class="text-secondary fw-medium text-left">' + (data || '-') + '</span>'
                         }
                     },
 
                     {
                         data: 'model',
                         render: function(data){
-                            return '<span>' + data + '</span>'
+                            return '<span class="text-dark fw-bold text-center">' + data + '</span>'
                         }
                     },
 
                     {
                         data: 'value',
+                        className: 'text-center font-monospace',
                         render: function(data){
-                            return '<span>' + data + '</span>'
+                            return '<span class="fw-semibold text-success-emphasis text-center"> Rs. ' + data + '</span>'
                         }
                     },
 
                     {
                         data: 'branch',
                         render: function(data){
-                            return '<span>' + data + '</span>'
+                            return '<span class="text-center text-dark"><i class="bi bi-building text-muted me-1"></i>' + (data || 'Main HQ') + '</span>'
                         }
                     },
 
                     {
                         data: 'purchasedDate',
                         render: function(data){
-                            return '<span>' + data + '</span>'
+                            return '<span class="text-secondary small"><i class="bi bi-calendar3 text-muted me-1 text-center"></i>' + data + '</span>'
                         }
                     },
 
                     {
                         data: 'status',
                         render: function(data){
-                            return '<span>' + data + '</span>'
+
+                            var statusStr = (data).toLowerCase();
+                            var badgeClass = 'bg-success-subtle text-success-emphasis border border-success-subtle';
+                            var icon = 'bi-check-circle-fill me-1';
+                            var label = 'In Stock';
+
+                            if (statusStr === 'issued') {
+                                badgeClass = 'bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+                                icon = 'bi-exclamation-triangle-fill me-1';
+                                label = 'Issued'
+
+                            } else if (statusStr === 'scrapped') {
+                                badgeClass = 'bg-danger-subtle text-danger-emphasis border border-danger-subtle';
+                                icon = 'bi-x-circle-fill me-1';
+                                label = 'Scrapped';
+                            }
+
+                            return '<span class="badge rounded-pill ' + badgeClass + ' px-3 py-1 fw-medium">' +
+                                   '<i class="bi ' + icon + '"></i>' + label + 
+                                   '</span>';
+                        }
+                    },
+
+                    {
+                        render: function(data){
+                            return '<button class="btn btn-sm btn-light border shadow-sm btn-edit text-primary fw-medium px-3 py-1 transition-all" title="Edit Asset"><i class="bi bi-pencil-square me-1"></i> Edit </button>'
                         }
                     }
                 ],
@@ -125,5 +157,97 @@ block scripts
                     emptyTable: 'No Assets Found',
                     loadingRecords: '<div class="spinner-border text-primary my-3" role="status"></div>'
                 }
+            });
+
+            $('#assetTable').on('click', '.btn-edit', function(){
+                var tr = $(this).closest('tr');
+                var rowData = assetTable.row(tr).data();
+
+                if(rowData){
+                    $('#originalSerialNumber').val(rowData.serialNumber)
+
+                    $('input[name="serialNumber"]').val(rowData.serialNumber);
+                    $('input[name="make"]').val(rowData.make)
+                    $('input[name="model"]').val(rowData.model)
+                    $('input[name="value"]').val(rowData.value)
+                    $('input[name="branch"]').val(rowData.branch)
+
+                    if(rowData.purchasedDate){
+                        var d = new Date(rowData.purchasedDate)
+                        if(!isNaN(d)){
+                            var formatDate = d.toISOString().split('T')[0];
+                            $('input[name="purchasedDate"]').val(formatDate);
+                        }else{
+                            $('input[name="purchasedDate"]').val(rowData.purchasedDate);
+                        }
+                    }
+
+                    $('select[name="status"]').val(rowData.status || 'in_stock');
+
+                    $('#addAssetModalLabel').text('Update Asset Details');
+                    $('#assetForm button[type="submit"]').text('Update Asset');
+                    $('#addAssetModal').modal('show');
+                }
+            });
+
+
+            $('#addAssetModal').on('hidden.bs.modal', function(){
+                $('#assetForm')[0].reset();
+                $('#originalSerialNumber').val('')
+                $('#addAssetModalLabel').text('Create New Asset')
+                $('#assetForm button[type="submit"]').text('Save Asset');
+            });
+
+
+            $('#assetForm').on('submit', function(e){
+                e.preventDefault();
+
+                var serialNumber = $('#originalSerialNumber').val();
+                var isUpdate = (serialNumber && serialNumber.trim() !== '');
+
+                var formatDataList = $(this).serializeArray();
+                var payload = {};
+                $.each(formatDataList, function(i, field){
+                    if(field.name !== 'serialNumber'){
+                        payload[field.name] = field.value;
+                    }
+                });
+
+                if(payload.value){
+                    payload.value = Number(payload.value)
+                }
+
+                var requestUrl = isUpdate ? (API_UPDATE_URL + encodeURIComponent(serialNumber)) : API_CREATE_URL;
+                var requestMethod = isUpdate ? 'PUT' : 'POST'
+                var submitBtn = $(this).find('button[type="submit"]');
+                var originalBtnText = submitBtn.text();
+                submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Saving...');
+
+
+                $.ajax({
+                    url: requestUrl,
+                    type: requestMethod,
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function(response){
+                        $('#addAssetModal').modal('hide');
+                        if(assetTable){
+                            assetTable.ajax.reload(null, false);
+                        }
+                    },
+
+                    error: function(xhr, status, error){
+                        var errMsg = 'Failed to process asset request'
+                        if(xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)){
+                            errMsg = xhr.responseJSON.message || xhr.responseJSON.error;
+                        }
+                        alert('Error ' + errMsg);
+                    },
+
+                    complete: function(){
+                        submitBtn.prop('disabled', false).text(originalBtnText);
+                    }
+                });
+
             });
         });

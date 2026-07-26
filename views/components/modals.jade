@@ -1,38 +1,38 @@
 
 mixin formModal(modalId, title, formId, submitBtnText="Save Changes")
-    div.modal.fade(id=modalId, tabindex="-1", aria-lablledby=`${modalId}Label`, aria-hidden="true")
+    div.modal.fade(id=modalId, tabindex="-1", aria-labelledby=`${modalId}Label`, aria-hidden="true")
         div.modal-dialog.modal-dialog-centered.modal-lg
-            div.modal-content
-                div.modal-header
-                    h5.modal-title(id=`${modalId}Label`)= title 
-                    button.btn-close(type="button", data-bs-dismiss="modal" aria-label="Close")
+            div.modal-content.border-0.shadow-lg.rounded-4.overflow-hidden
+                div.modal-header.bg-light.border-bottom-0.px-4.py-3
+                    h5.modal-title.fw-bold.text-dark(id=`${modalId}Label`)= title 
+                    button.btn-close.shadow-none(type="button", data-bs-dismiss="modal" aria-label="Close")
 
                 form(id=formId, novalidate)
-                    div.model-body
+                    div.modal-body.p-4
                         if block
                             block
                         else    
-                            p.text-muted.small No form field provided 
-                    div.modal-footer
-                        button.btn.btn-outline-secondary.btn-sm(type='button', data-bs-dimiss="modal") Cancel 
-                        button.btn.btn-primary.btn-sm(type="submit")= submitBtnText
+                            p.text-muted.small.mb-0 No form field provided 
+                    div.modal-footer.px-4.py-3.bg-light.border-top-0
+                        button.btn.btn-outline-secondary.btn-sm.px-4.py-2.fw-medium.shadow-sm(type='button', data-bs-dismiss="modal") Cancel 
+                        button.btn.btn-primary.btn-sm.px-4.py-2.fw-medium.shadow-sm(type="submit")= submitBtnText
 
 
 mixin confirmModal(modalId, title, message, confirmBtnText="Confirm Action", connfirmBtnClass="btn-danger", confirmActionId=null)
-    div.modal.fade(id=modalId, tabindex="-1", aria-lablledby=`${modalId}Label`, aria-hidden="true")
-        div.modal-dialog.modal-dialog-centered.modal-lg
-            div.modal-content
-                div.modal-header
-                    h5.modal-title(id=`${modalId}Label`) | #{title}
-                    button.btn-close(type="button", data-bs-dismiss="modal" aria-label="Close")
+    div.modal.fade(id=modalId, tabindex="-1", aria-labelledby=`${modalId}Label`, aria-hidden="true")
+        div.modal-dialog.modal-dialog-centered
+            div.modal-content.border-o.shadow-lg.rounded-4.overflow-hidden
+                div.modal-header.bg-light.border-bottom-0.px-4.py-3
+                    h5.modal-title.fw-bold.text-dark(id=`${modalId}Label`)= title
+                    button.btn-close.shadow-none(type="button", data-bs-dismiss="modal" aria-label="Close")
 
-                div.model-body
+                div.modal-body.p-4
                     p.mb-0.text-secondary= message
                     if block
                         div.mt-3
                             block 
 
-                div.modal-footer
-                    button.btn.btn-outline-secondary.btn-sm(type='button', data-bs-dimiss="modal") Cancel 
-                    button .btn.btn-sm(type="buttin", class=connfirmBtnClass, id=confirmActionId)= confirmBtnText
+                div.modal-footer.px-4.py-3.bg-light.border-top-0
+                    button.btn.btn-outline-secondary.btn-sm.px-4.py-2.fw-medium.shadow-sm(type='button', data-bs-dismiss="modal") Cancel 
+                    button.btn.btn-sm.btn-primary.px-4.py-2.fw-medium.shadow-sm(type="button", class=connfirmBtnClass, id=confirmActionId)= confirmBtnText
 

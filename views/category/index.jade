@@ -1,0 +1,159 @@
+extends ../layout
+include ../components/modals
+
+block content
+
+    div.d-flex.justify-content-between.align-items-center.mb-4
+        div 
+            h3.fw-bold.text-dark.mb-1 Category view 
+            p.text-secondary.small.mb-0 Manage Your Categories with Valid Crendentials
+        button.btn.btn-primary.btn-sm(type="button", data-bs-toggle="modal", data-bs-target="#addCategoryModal") + Add New Category 
+    
+    div.card.border-0.shodow-md
+        div.card-body.p-4
+            table#categoryTable.table.table-striped.table-hover.w-100
+                thead.table-light
+                    tr 
+                        th.text-center Name
+                        th.text-center Description
+                        th.text-left Actions
+                tbody 
+
+    +formModal('addCategoryModal', 'Create New Category', 'categoryForm', 'Save Category')
+        input#originalName(type="hidden", name="originalName", value="")
+        div.row.g-3.pt-1
+            div.col-md-6
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Name
+                input.form-control.form-control-sm.shadow-none(type="text", name="name", required)
+
+            div.col-md-6
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Description
+                input.form-control.form-control-sm(type="text", name="description", required)
+
+
+block scripts 
+    script. 
+        var categoryTable;
+
+        var API_GET_URL = '/api/categories/getCategories'
+        var API_CREATE_URL = '/api/categories/addCategory'
+        var API_UPDATE_URL = '/api/categories/update/'
+        
+        $(document).ready(function(){
+            categoryTable = $('#categoryTable').DataTable({
+                ajax:{
+                    url: API_GET_URL,
+                    type: 'GET',
+                    dataSrc: function(json){
+                        if(Array.isArray(json)){
+                            return json
+                        }
+
+                        return json.categories || json.data || []
+                    }
+                },
+
+                columns: [
+                    {
+                        data: 'name',
+                        className: 'text-center',
+                        render: function(data){
+                            return '<span class="badge bg-light text-dark border font-monospace px-2 py-1 shadow-sm">' + (data || 'N/A') + '</span>';
+                        }
+                    },
+
+                    {
+                        data: 'description',
+                        className: 'text-center',
+                        render: function(data){
+                            return '<span class="text-secondary fw-medium text-left">' + (data || '-') + '</span>'
+                        }
+                    },
+
+                    {
+                        render: function(data){
+                            return '<button class="btn btn-sm btn-light border shadow-sm btn-edit text-primary fw-medium px-3 py-1 transition-all" title="Edit Asset"><i class="bi bi-pencil-square me-1"></i> Edit </button>'
+                        }
+                    }
+                ],
+
+                order:[[1, 'asc']],
+                language:{
+                    emptyTable: 'No Categories Found',
+                    loadingRecords: '<div class="spinner-border text-primary my-3" role="status"></div>'
+                }
+            });
+
+            $('#categoryTable').on('click', '.btn-edit', function(){
+                var tr = $(this).closest('tr');
+                var rowData = categoryTable.row(tr).data();
+
+                if(rowData){
+                    $('#originalName').val(rowData.name)
+
+                    $('input[name="name"]').val(rowData.name);
+                    $('input[name="description"]').val(rowData.description);
+
+                    $('#addCategoryModalLabel').text('Update Category Details');
+                    $('#categoryForm button[type="submit"]').text('Update Category');
+                    $('#addCategoryModal').modal('show');
+                }
+            });
+
+
+            $('#addCategoryModal').on('hidden.bs.modal', function(){
+                $('#categoryForm')[0].reset();
+                $('#originalName').val('')
+                $('#addCategoryModalLabel').text('Create New Category')
+                $('#categoryForm button[type="submit"]').text('Save Category');
+            });
+
+
+            $('#categoryForm').on('submit', function(e){
+                e.preventDefault();
+
+                var Name = $('#originalName').val();
+                var isUpdate = (Name && Name.trim() !== '');
+
+                var formatDataList = $(this).serializeArray();
+                var payload = {};
+                $.each(formatDataList, function(i, field){
+                    if(field.name !== 'originalName'){
+                        payload[field.name] = field.value;
+                    }
+                });
+
+                var requestUrl = isUpdate ? (API_UPDATE_URL + encodeURIComponent(Name)) : API_CREATE_URL;
+                var requestMethod = isUpdate ? 'PUT' : 'POST'
+                var submitBtn = $(this).find('button[type="submit"]');
+                var originalBtnText = submitBtn.text();
+                submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Saving...');
+
+
+                $.ajax({
+                    url: requestUrl,
+                    type: requestMethod,
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function(response){
+                        $('#addCategoryModal').modal('hide');
+                        if(categoryTable){
+                            categoryTable.ajax.reload(null, false);
+                        }
+                    },
+
+                    error: function(xhr, status, error){
+                        var errMsg = 'Failed to process asset request'
+                        if(xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)){
+                            errMsg = xhr.responseJSON.message || xhr.responseJSON.error;
+                        }
+                        alert('Error ' + errMsg);
+                    },
+
+                    complete: function(){
+                        submitBtn.prop('disabled', false).text(originalBtnText);
+                    }
+                });
+
+            });
+        });

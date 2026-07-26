@@ -13,4 +13,14 @@ router.get('/assets', (req, res) => {
     });
 });
 
+router.get('/categories', (req, res) => {
+    res.render('category/index', {
+        title: 'Category Master'
+    });
+});
+
+router.get('/', (req, res) => {
+    res.render('assets/stockView');
+});
+
 export default router;
