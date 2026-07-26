@@ -1,0 +1,220 @@
+extends ../layout
+
+block content
+
+    div.d-flex.justify-content-between.align-items-center.mb-4
+        div 
+            h3.fw-bold.text-dark.mb-1 Asset Lifecycle History 
+            p.text-secondary.small.mb-0 Track the entire history of an asset from its purchase to scrap.
+
+    div.card.border-0.shadow-sm.rounded-4.mb-4
+        div.card-body.p-4
+            div.row.align-items-center
+                div.col-md-6
+                    label.form-label.small.fw-semibold.text-secondary.mb-1 Search Asset By Serial Number, Make or Model
+                    input#assetSearchInput.form-control.form-control-sm.shadow-none(type="text", list="assetDatalist", placeholder="Start typing for asset history make/mode serial No....")
+                    datalist#assetDatalist
+
+                div.col-md-8.text-end.pt-3.pt-md-0
+                    span#statusIndicator.badge.bg-light.text-secondary.border.px-3.py-2.font-monospace Waiting for search...
+
+    div#summaryCard.card.border-0.shadow-sm.rounded-4.mb-4.d-none
+        div.card-header.bg-light.border-bottom-0.px-4.py-3
+            h6.fw-bold.text-dark.mb-0 Financial & Hardware Overview
+        div.card-body.p-4
+            div.row.g-3
+                div.col-6.col-md-3
+                    p.text-secondary.small.mb-1 Make & Model
+                    h6#summaryModel.fw-bold.text-dark.mb-0 -
+                div.col-6.col-md-3
+                    p.text-secondary.small.mb-1 Purchased Date
+                    h6#summaryDate.fw-medium.text-dark.mb-0 -
+                div.col-6.col-md-3
+                    p.text-secondary.small.mb-1 Initial Valuation
+                    h6#summaryValue.fw-bold.text-success-emphasis.font-monospace.mb-0 -
+                div.col-6.col-md-3
+                    p.text-secondary.small.mb-1 Current Status
+                    div#summaryStatus -
+
+    div.card.border-0.shadow-sm.rounded-4
+        div.card-header.bg-white.border-bottom.px-4.py-3
+            h6.fw-bold.text-dark.mb-0 Chronological Audit Trail
+        div.card-body.p-4
+            table#historyTable.table.table-striped.table-hover.w-100
+                thead.table-light
+                    tr 
+                        th.text-start Action
+                        th.text-start Timestamp
+                        th.text-start Assigned To
+                        th.text-start Department
+                        th.text-start Reason
+                tbody 
+
+block scripts 
+    script. 
+        var historyTable;
+        var API_GET_ALL = '/api/assets/getAssets';
+        var API_GET_HISTORY = '/api/assets/getAssetHistory/';
+        var searchAsset = {};
+
+        $(document).ready(function(){
+            historyTable = $('#historyTable').DataTable({
+                data: [],
+                columns: [
+                    {
+                        data: 'action',
+                        render: function(data){
+                            var actionStr = (data || '').toLowerCase();
+                            var badgeClass = 'bg-primary-subtle text-primary-emphasis border border-primary-subtle';
+                            var icon = 'bi-info-circle-fill me-1';
+                            var label = data || 'Unknown';
+
+                            if (actionStr === 'in_stock') {
+                                badgeClass = 'bg-success-subtle text-success-emphasis border border-success-subtle';
+                                icon = 'bi-box-seam-fill me-1';
+                                label = 'Added to Stock';
+
+                            } else if (actionStr === 'issued') {
+                                badgeClass = 'bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+                                icon = 'bi-person-check-fill me-1';
+                                label = 'Issued';
+
+                            } else if (actionStr === 'returned') {
+                                badgeClass = 'bg-info-subtle text-info-emphasis border border-info-subtle';
+                                icon = 'bi-arrow-return-left me-1';
+                                label = 'Returned';
+
+                            } else if (actionStr === 'scrapped') {
+                                badgeClass = 'bg-danger-subtle text-danger-emphasis border border-danger-subtle';
+                                icon = 'bi-x-circle-fill me-1';
+                                label = 'Scrapped';
+                                
+                            }
+                            return '<span class="badge rounded-pill ' + badgeClass + ' px-3 py-1 fw-medium"><i class="bi ' + icon + '"></i>' + label + '</span>';
+                        }
+                    },
+
+                    {
+                        data: 'createdAt',
+                        render: function(data){
+                            if(!data) return '-';
+                            var d = new Date(data);
+                            return '<span class="text-secondary small font-monospace">' + (isNaN(d) ? data : d.toLocaleString()) + '</span>';
+                        }
+                    },
+                    {
+                        data: 'employee',
+                        render: function(data){
+                            if(data && data.name){
+                                return '<span class="fw-medium text-dark">' + data.name + ' <small class="text-muted">(' + (data.email || '') + ')</small></span>';
+                            }
+                            return '<span class="text-muted fst-italic">N/A (Warehouse)</span>';
+                        }
+                    },
+                    {
+                        data: 'employee',
+                        render: function(data){
+                            if(data && data.department){
+                                return '<span class="badge bg-light text-dark border">' + data.department + '</span>';
+                            }
+                            return '<span class="text-muted">-</span>';
+                        }
+                    },
+                    {
+                        data: 'reason',
+                        render: function(data){
+                            return '<span class="text-secondary">' + (data || '<i class="text-muted fst-italic">No reason recorded</i>') + '</span>';
+                        }
+                    }
+                ],
+                order: [[1, 'desc']],
+                language: {
+                    emptyTable: 'Please search an asset above to inspect its lifecycle history',
+                    loadingRecords: '<div class="spinner-border text-primary my-3" role="status"></div>'
+                }
+            });
+
+            $.ajax({
+                url: API_GET_ALL,
+                type: 'GET',
+                success: function(response){
+                    var list = Array.isArray(response) ? response : (response.assets || response.data || []);
+                    var datalist = $('#assetDatalist');
+                    datalist.empty();
+
+                    $.each(list, function(i, item){
+                        var idval = item.id || item.Id;
+                        var label = (item.serialNumber || 'No-Serial') + ' — ' + (item.make || '') + ' ' + (item.model || '');
+                        
+                        searchAsset[label] = idval;
+                        searchAsset[idval] = label;
+
+                        datalist.append('<option value="' + label + '"></option>');
+                    });
+
+                    var urlParams = new URLSearchParams(window.location.search);
+                    //- var urlId = urlParams.get('id');
+                    var urlId = window.location.pathname.split('/').pop();
+                    
+                    if(urlId){
+                        if(searchAsset[urlId]){
+                            $('#assetSearchInput').val(searchAsset[urlId])                            
+                            loadAssetHistory(urlId);
+                        }
+                    }
+                },
+                error: function(){
+                    $('#statusIndicator').removeClass('bg-light text-secondary').addClass('bg-danger-subtle text-danger').text('Failed to load assets list');
+                }
+            });
+
+            $('#assetSearchInput').on('change', function(){
+                var val = $(this).val().trim();
+                var matchedId = searchAsset[val];
+                if(matchedId){
+                    if(window.history && window.history.pushState){
+                        var newurl = window.location.protocol + "//" + window.location.host + '/getAssetHistory/' + matchedId;
+                        window.history.pushState({path: newurl}, '', newurl);
+                    }
+                    loadAssetHistory(matchedId);
+                }
+            });
+
+            function loadAssetHistory(assetId){
+                $('#statusIndicator').html('<span class="spinner-border spinner-border-sm me-1" role="status"></span>Loading lifecycle...');
+                
+                $.ajax({
+                    url: API_GET_HISTORY + assetId,
+                    type: 'GET',
+                    success: function(response){
+                        console.log('Full Response: ', response)
+                        console.log('Response History: ', response.history);
+                        $('#statusIndicator').removeClass('bg-light text-secondary bg-danger-subtle text-danger').addClass('bg-success-subtle text-success-emphasis').text('Lifecycle Attached');
+                        
+                        $('#summaryCard').removeClass('d-none');
+                        $('#summaryModel').text((response.make || '') + ' ' + (response.model || ''));
+                        $('#summaryDate').text(response.purchasedDate || '-');
+                        $('#summaryValue').text('Rs. ' + (response.value ? Number(response.value).toLocaleString('en-IN', {minimumFractionDigits: 2}) : '0.00'));
+                        
+                        var statusStr = (response.status || '').toLowerCase();
+                        var badgeHtml = '<span class="badge bg-success-subtle text-success-emphasis border px-3 py-1">In Stock</span>';
+                        if(statusStr === 'issued') badgeHtml = '<span class="badge bg-warning-subtle text-warning-emphasis border px-3 py-1">Issued</span>';
+                        if(statusStr === 'scrapped') badgeHtml = '<span class="badge bg-danger-subtle text-danger-emphasis border px-3 py-1">Scrapped</span>';
+                        $('#summaryStatus').html(badgeHtml);
+
+                        historyTable.clear();
+
+                        if(response.history && Array.isArray(response.history)){
+                            historyTable.rows.add(response.history);
+                        }
+
+                        historyTable.draw();
+                    },
+
+                    error: function(xhr){
+                        $('#statusIndicator').removeClass('bg-light text-secondary').addClass('bg-danger-subtle text-danger').text('Failed to fetch history log');
+                        alert('Error: Could not retrieve lifecycle history for this asset.');
+                    }
+                });
+            }
+        });

@@ -306,6 +306,8 @@ export const getAssetHistory = async (req, res, next) => {
             purchasedDate: asset.purchasedDate,
             make: asset.make,
             model: asset.model,
+            serialNumber: asset.serialNumber,
+            branch: asset.branch,
             status: asset.status,
             history: asset.history
         });

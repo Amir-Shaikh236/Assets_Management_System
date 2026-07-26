@@ -102,12 +102,12 @@ export const getEmp = async (req, res, next) => {
             searchQuery.email = { [Op.iLike]: `%${email.trim()}%` };
         }
 
-        const emp = await Employee.findAll({
+        const employees = await Employee.findAll({
             where: searchQuery,
             order: [['id', 'ASC']],
         });
 
-        res.status(200).json({ emp });
+        res.status(200).json(employees);
 
     } catch (error) {
         next(error);

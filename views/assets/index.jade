@@ -146,8 +146,11 @@ block scripts
                     },
 
                     {
-                        render: function(data){
-                            return '<button class="btn btn-sm btn-light border shadow-sm btn-edit text-primary fw-medium px-3 py-1 transition-all" title="Edit Asset"><i class="bi bi-pencil-square me-1"></i> Edit </button>'
+                        render: function(data, type, row){
+                            var assetId = row.id || row.Id || '';
+                            var editBtn = '<button class="btn btn-sm btn-light border shadow-sm btn-edit text-primary fw-medium px-3 py-1 transition-all" title="Edit Asset"><i class="bi bi-pencil-square me-1"></i> Edit </button>';
+                            var historyBtn = '<a href="/getAssetHistory?id=' + assetId + '" class="btn btn-sm btn-light border shadow-sm text-info fw-medium px-3 py-1 transition-all" title="View LifeCycle History"><i class="bi bi-clock-history me-1"></i> History </a>';
+                            return '<div class="d-flex justify-content-end">' + editBtn + historyBtn + '</div>';
                         }
                     }
                 ],

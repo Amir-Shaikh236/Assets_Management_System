@@ -10,6 +10,6 @@ router.delete('/delete/:serialNumber', deleteAsset);
 router.post('/:id/issue', issueAsset);
 router.post('/:id/return', returnAsset);
 router.post('/:id/scrap', scrap);
-router.get('/:id/getAssetHistory', getAssetHistory);
+router.get('/getAssetHistory/:id', getAssetHistory);
 
 export default router;

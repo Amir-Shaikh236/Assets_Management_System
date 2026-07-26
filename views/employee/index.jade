@@ -5,138 +5,123 @@ block content
 
     div.d-flex.justify-content-between.align-items-center.mb-4
         div 
-            h3.fw-bold.text-dark.mb-1 Assets view 
-            p.text-secondary.small.mb-0 Manage Your Assets with Valid Crendentials
-        button.btn.btn-primary.btn-sm(type="button", data-bs-toggle="modal", data-bs-target="#addAssetModal") + Add New Asset 
+            h3.fw-bold.text-dark.mb-1 Employees
+            p.text-secondary.small.mb-0 Manage Your Employee with Valid Crendentials
+        button.btn.btn-primary.btn-sm(type="button", data-bs-toggle="modal", data-bs-target="#addEmployeeModal") + Add New Employee 
     
     div.card.border-0.shodow-md
         div.card-body.p-4
-            table#assetTable.table.table-striped.table-hover.w-100
+            table#employeeTable.table.table-striped.table-hover.w-100
                 thead.table-light
                     tr 
-                        th.text-left Sr. No.
-                        th.text-left Make 
-                        th.text-center Model 
-                        th.text-center Value
-                        th.text-center Branch 
-                        th.text-center Purchased Date
+                        th.text-left Name
+                        th.text-left Email 
+                        th.text-center Department 
+                        th.text-center Designation
+                        th.text-center Joining Date 
                         th.text-center Status
                         th.text-right Actions
                 tbody 
 
-    +formModal('addAssetModal', 'Create New Asset', 'assetForm', 'Save Asset')
-        input#originalSerialNumber(type="hidden", name="originalSerialNumber", value="")
+    +formModal('addEmployeeModal', 'Add New Employee', 'employeeForm', 'Save Employee')
+        input#originalEmail(type="hidden", name="originalEmail", value="")
         div.row.g-3.pt-1
             div.col-md-6
-                label.form-label.small.fw-semibold.text-secondary.mb-1 Serial Number
-                input.form-control.form-control-sm.shadow-none(type="text", name="serialNumber", required)
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Name
+                input.form-control.form-control-sm.shadow-none(type="text", name="name", required)
             div.col-md-6
-                label.form-label.small.fw-semibold.text-secondary.mb-1 Make
-                input.form-control.form-control-sm(type="text", name="make", required)
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Email
+                input.form-control.form-control-sm(type="text", name="email", required)
             div.col-md-6
-                label.form-label.small.fw-semibold.text-secondary.mb-1 Model 
-                input.form-control.form-control-sm(type="text", name="model", required)
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Department 
+                input.form-control.form-control-sm(type="text", name="department", required)
             div.col-md-6
-                label.form-label.small.fw-semibold.text-secondary.mb-1 Value (Rs)
-                input.form-control.form-control-sm(type="text", name="value", required)
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Designation
+                input.form-control.form-control-sm(type="text", name="designation", required)
             div.col-md-6
-                label.form-label.small.fw-semibold.text-secondary.mb-1 Branch 
-                input.form-control.form-control-sm(type="text", name="branch", required)
-            div.col-md-6
-                label.form-label.small.fw-semibold.text-secondary.mb-1 Purchased Date
-                input.form-control.form-control-sm(type="date", name="purchasedDate", required)
+                label.form-label.small.fw-semibold.text-secondary.mb-1 Joining Date 
+                input.form-control.form-control-sm(type="date", name="JoiningDate", required)
             div.col-md-12
                 label.form-label.small.fw-semibold.text-secondary.mb-1 status
                 select.form-select.form-select-sm.shadow-none(name="status", required)
-                    option(value="in_stock", selected) In_Stock 
-                    option(value="issued") Issued 
-                    option(value="scrapped") Scrapped
+                    option(value="active", selected) Active 
+                    option(value="inactive") In_Active
 
 
 block scripts 
     script. 
-        var assetTable;
+        var employeeTable;
 
-        var API_GET_URL = '/api/assets/getAssets'
-        var API_CREATE_URL = '/api/assets/addAssets'
-        var API_UPDATE_URL = '/api/assets/update/'
+        var API_GET_URL = '/api/employees/getEmp'
+        var API_CREATE_URL = '/api/employees/addEmp'
+        var API_UPDATE_URL = '/api/employees/update/'
         
         $(document).ready(function(){
-            assetTable = $('#assetTable').DataTable({
+            employeeTable = $('#employeeTable').DataTable({
                 ajax:{
-                    url: '/api/assets/getAssets',
+                    url: API_GET_URL,
                     type: 'GET',
                     dataSrc: function(json){
                         if(Array.isArray(json)){
                             return json
                         }
 
-                        return json.assets || json.data || []
+                        return json.employees || json.data || []
                     }
                 },
 
                 columns: [
                     {
-                        data: 'serialNumber',
+                        data: 'name',
                         render: function(data){
                             return '<span class="badge bg-light text-dark border font-monospace px-2 py-1 shadow-sm">' + (data || 'N/A') + '</span>';
                         }
                     },
 
                     {
-                        data: 'make',
+                        data: 'email',
                         render: function(data){
                             return '<span class="text-secondary fw-medium text-left">' + (data || '-') + '</span>'
                         }
                     },
 
                     {
-                        data: 'model',
+                        data: 'department',
                         render: function(data){
                             return '<span class="text-dark fw-bold text-center">' + data + '</span>'
                         }
                     },
 
                     {
-                        data: 'value',
-                        className: 'text-center font-monospace',
+                        data: 'designation',
+                        className: 'text-center',
                         render: function(data){
-                            return '<span class="fw-semibold text-success-emphasis text-center"> Rs. ' + data + '</span>'
+                            return '<span class="fw-semibold text-success-emphasis text-center">' + data + '</span>'
                         }
                     },
 
                     {
-                        data: 'branch',
+                        data: 'JoiningDate',
                         render: function(data){
-                            return '<span class="text-center text-dark"><i class="bi bi-building text-muted me-1"></i>' + (data || 'Main HQ') + '</span>'
-                        }
-                    },
-
-                    {
-                        data: 'purchasedDate',
-                        render: function(data){
-                            return '<span class="text-secondary small"><i class="bi bi-calendar3 text-muted me-1 text-center"></i>' + data + '</span>'
+                            if(!data) return '-';
+                            var d = new Date(data);
+                            return '<span class="text-secondary small"><i class="bi bi-calendar3 text-muted me-1 text-center"></i>' + (isNaN(d) ? data : d.toLocaleString()) + '</span>';
                         }
                     },
 
                     {
                         data: 'status',
                         render: function(data){
-
-                            var statusStr = (data).toLowerCase();
+                            var statusStr = (data || 'active').toLowerCase();
                             var badgeClass = 'bg-success-subtle text-success-emphasis border border-success-subtle';
                             var icon = 'bi-check-circle-fill me-1';
-                            var label = 'In Stock';
+                            var label = 'Active';
 
-                            if (statusStr === 'issued') {
+                            if (statusStr === 'inactive') {
                                 badgeClass = 'bg-warning-subtle text-warning-emphasis border border-warning-subtle';
                                 icon = 'bi-exclamation-triangle-fill me-1';
-                                label = 'Issued'
+                                label = 'In_Active'
 
-                            } else if (statusStr === 'scrapped') {
-                                badgeClass = 'bg-danger-subtle text-danger-emphasis border border-danger-subtle';
-                                icon = 'bi-x-circle-fill me-1';
-                                label = 'Scrapped';
                             }
 
                             return '<span class="badge rounded-pill ' + badgeClass + ' px-3 py-1 fw-medium">' +
@@ -154,70 +139,65 @@ block scripts
 
                 order:[[1, 'asc']],
                 language:{
-                    emptyTable: 'No Assets Found',
+                    emptyTable: 'No Employee Found',
                     loadingRecords: '<div class="spinner-border text-primary my-3" role="status"></div>'
                 }
             });
 
-            $('#assetTable').on('click', '.btn-edit', function(){
+            $('#employeeTable').on('click', '.btn-edit', function(){
                 var tr = $(this).closest('tr');
-                var rowData = assetTable.row(tr).data();
+                var rowData = employeeTable.row(tr).data();
 
                 if(rowData){
-                    $('#originalSerialNumber').val(rowData.serialNumber)
+                    $('#originalEmail').val(rowData.email)
 
-                    $('input[name="serialNumber"]').val(rowData.serialNumber);
-                    $('input[name="make"]').val(rowData.make)
-                    $('input[name="model"]').val(rowData.model)
-                    $('input[name="value"]').val(rowData.value)
-                    $('input[name="branch"]').val(rowData.branch)
+                    $('input[name="name"]').val(rowData.name)
+                    $('input[name="email"]').val(rowData.email);
+                    $('input[name="department"]').val(rowData.department)
+                    $('input[name="designation"]').val(rowData.designation)
 
-                    if(rowData.purchasedDate){
-                        var d = new Date(rowData.purchasedDate)
+                    if(rowData.JoiningDate){
+                        var d = new Date(rowData.JoiningDate)
                         if(!isNaN(d)){
                             var formatDate = d.toISOString().split('T')[0];
-                            $('input[name="purchasedDate"]').val(formatDate);
+                            $('input[name="JoiningDate"]').val(formatDate);
                         }else{
-                            $('input[name="purchasedDate"]').val(rowData.purchasedDate);
+                            $('input[name="JoiningDate"]').val(rowData.JoiningDate);
                         }
                     }
 
-                    $('select[name="status"]').val(rowData.status || 'in_stock');
+                    $('select[name="status"]').val(rowData.status);
 
-                    $('#addAssetModalLabel').text('Update Asset Details');
-                    $('#assetForm button[type="submit"]').text('Update Asset');
-                    $('#addAssetModal').modal('show');
+                    $('#addEmployeeModalLabel').text('Update Employee Details');
+                    $('#employeeForm button[type="submit"]').text('Update Employee');
+                    $('#addEmployeeModal').modal('show');
                 }
             });
 
 
-            $('#addAssetModal').on('hidden.bs.modal', function(){
-                $('#assetForm')[0].reset();
-                $('#originalSerialNumber').val('')
-                $('#addAssetModalLabel').text('Create New Asset')
-                $('#assetForm button[type="submit"]').text('Save Asset');
+            $('#addEmployeeModal').on('hidden.bs.modal', function(){
+                $('#employeeForm')[0].reset();
+                $('#originalEmail').val('')
+                $('#addEmployeeModalLabel').text('Add New Employee')
+                $('#employeeForm button[type="submit"]').text('Add Employee');
             });
 
 
-            $('#assetForm').on('submit', function(e){
+            $('#employeeForm').on('submit', function(e){
                 e.preventDefault();
 
-                var serialNumber = $('#originalSerialNumber').val();
-                var isUpdate = (serialNumber && serialNumber.trim() !== '');
+                var Email = $('#originalEmail').val();
+                var isUpdate = (Email && Email.trim() !== '');
 
                 var formatDataList = $(this).serializeArray();
                 var payload = {};
                 $.each(formatDataList, function(i, field){
-                    if(field.name !== 'serialNumber'){
+                    if(field.name !== 'originalEmail'){
                         payload[field.name] = field.value;
                     }
                 });
 
-                if(payload.value){
-                    payload.value = Number(payload.value)
-                }
-
-                var requestUrl = isUpdate ? (API_UPDATE_URL + encodeURIComponent(serialNumber)) : API_CREATE_URL;
+                var requestUrl = isUpdate ? (API_UPDATE_URL + encodeURIComponent(Email)) : API_CREATE_URL;
                 var requestMethod = isUpdate ? 'PUT' : 'POST'
                 var submitBtn = $(this).find('button[type="submit"]');
                 var originalBtnText = submitBtn.text();
@@ -230,9 +210,9 @@ block scripts
                     contentType: 'application/json',
                     data: JSON.stringify(payload),
                     success: function(response){
-                        $('#addAssetModal').modal('hide');
-                        if(assetTable){
-                            assetTable.ajax.reload(null, false);
+                        $('#addEmployeeModal').modal('hide');
+                        if(employeeTable){
+                            employeeTable.ajax.reload(null, false);
                         }
                     },
 

@@ -19,6 +19,18 @@ router.get('/categories', (req, res) => {
     });
 });
 
+router.get('/employees', (req, res) => {
+    res.render('employee/index', {
+        title: 'Employee Master'
+    });
+});
+
+router.get('/getAssetHistory/', (req, res) => {
+    res.render('history/index', {
+        title: 'LifeCycle Asset'
+    });
+});
+
 router.get('/', (req, res) => {
     res.render('assets/stockView');
 });
