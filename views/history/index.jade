@@ -43,11 +43,11 @@ block content
             table#historyTable.table.table-striped.table-hover.w-100
                 thead.table-light
                     tr 
-                        th.text-start Action
-                        th.text-start Timestamp
+                        th.text-center Action
+                        th.text-center Updated At
                         th.text-start Assigned To
-                        th.text-start Department
-                        th.text-start Reason
+                        th.text-center Department
+                        th.text-right Reason
                 tbody 
 
 block scripts 
@@ -63,6 +63,7 @@ block scripts
                 columns: [
                     {
                         data: 'action',
+                        className: 'text-center',
                         render: function(data){
                             var actionStr = (data || '').toLowerCase();
                             var badgeClass = 'bg-primary-subtle text-primary-emphasis border border-primary-subtle';
@@ -96,14 +97,16 @@ block scripts
 
                     {
                         data: 'createdAt',
+                        className: 'text-center',
                         render: function(data){
                             if(!data) return '-';
                             var d = new Date(data);
-                            return '<span class="text-secondary small font-monospace">' + (isNaN(d) ? data : d.toLocaleString()) + '</span>';
+                            return '<span class="text-secondary small font-monospace">' + (isNaN(d) ? data : d.toISOString().split('T')[0]) + '</span>';
                         }
                     },
                     {
                         data: 'employee',
+                        className: 'text-start',
                         render: function(data, type, row){
                             var employee = data || row.employee || null;
                             if(employee && (employee.name || employee.email)){
@@ -114,6 +117,7 @@ block scripts
                     },
                     {
                         data: 'employee',
+                        className: 'text-center',
                         render: function(data, type, row){
                             var employee = data || row.employee || null;
                             if(employee && employee.department){
@@ -124,6 +128,7 @@ block scripts
                     },
                     {
                         data: 'reason',
+                        className: 'text-end',
                         render: function(data, type, row){
                             var reasonValue = data || row.reason;
                             if(reasonValue){

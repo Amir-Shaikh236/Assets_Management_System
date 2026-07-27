@@ -30,25 +30,25 @@ block content
         div.row.g-3.pt-1
             div.col-md-6
                 label.form-label.small.fw-semibold.text-secondary.mb-1 Serial Number
-                input.form-control.form-control-sm.shadow-none(type="text", name="serialNumber", required)
+                input#serialNumber.form-control.form-control-sm.shadow-none(type="text", name="serialNumber", required)
             div.col-md-6
                 label.form-label.small.fw-semibold.text-secondary.mb-1 Category Name
-                input.form-control.form-control-sm.shadow-none(type="text", name="categoryName", required)
+                input#categoryName.form-control.form-control-sm.shadow-none(type="text", name="categoryName", required)
             div.col-md-6
                 label.form-label.small.fw-semibold.text-secondary.mb-1 Make
-                input.form-control.form-control-sm(type="text", name="make", required)
+                input#make.form-control.form-control-sm(type="text", name="make", required)
             div.col-md-6
                 label.form-label.small.fw-semibold.text-secondary.mb-1 Model 
-                input.form-control.form-control-sm(type="text", name="model", required)
+                input#model.form-control.form-control-sm(type="text", name="model", required)
             div.col-md-6
                 label.form-label.small.fw-semibold.text-secondary.mb-1 Value (Rs)
-                input.form-control.form-control-sm(type="text", name="value", required)
+                input#value.form-control.form-control-sm(type="text", name="value", required)
             div.col-md-6
                 label.form-label.small.fw-semibold.text-secondary.mb-1 Branch 
-                input.form-control.form-control-sm(type="text", name="branch", required)
+                input#branch.form-control.form-control-sm(type="text", name="branch", required)
             div.col-md-6
                 label.form-label.small.fw-semibold.text-secondary.mb-1 Purchased Date
-                input.form-control.form-control-sm(type="date", name="purchasedDate", required)
+                input#purchasedDate.form-control.form-control-sm(type="date", name="purchasedDate", required)
             div.col-md-12
                 label.form-label.small.fw-semibold.text-secondary.mb-1 status
                 select.form-select.form-select-sm.shadow-none(name="status", required)
@@ -223,19 +223,26 @@ block scripts
                     $('#originalSerialNumber').val(rowData.serialNumber)
 
                     $('input[name="serialNumber"]').val(rowData.serialNumber);
+                    $('#serialNumber').prop('readonly', true);
+
                     $('input[name="make"]').val(rowData.make)
                     $('input[name="model"]').val(rowData.model)
                     $('input[name="value"]').val(rowData.value)
                     $('input[name="branch"]').val(rowData.branch)
-                    $('input[name="categoryName"]').val(rowData.category && rowData.category.name ? rowData.category.name : '')
-
+                    if(rowData.category && rowData.category.name){
+                        $('input[name="categoryName"]').val(rowData.category.name)
+                        $('#categoryName').prop('readonly', true);
+                    }
+                
                     if(rowData.purchasedDate){
                         var d = new Date(rowData.purchasedDate)
                         if(!isNaN(d)){
                             var formatDate = d.toISOString().split('T')[0];
                             $('input[name="purchasedDate"]').val(formatDate);
+                            $('#purchasedDate').prop('readonly', true);
                         }else{
                             $('input[name="purchasedDate"]').val(rowData.purchasedDate);
+                            $('#purchasedDate').prop('readonly', true);
                         }
                     }
 

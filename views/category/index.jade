@@ -24,7 +24,7 @@ block content
         div.row.g-3.pt-1
             div.col-md-6
                 label.form-label.small.fw-semibold.text-secondary.mb-1 Name
-                input.form-control.form-control-sm.shadow-none(type="text", name="name", required)
+                input#Name.form-control.form-control-sm.shadow-none(type="text", name="name", required)
 
             div.col-md-6
                 label.form-label.small.fw-semibold.text-secondary.mb-1 Description
@@ -92,6 +92,7 @@ block scripts
                     $('#originalName').val(rowData.name)
 
                     $('input[name="name"]').val(rowData.name);
+                    $('#Name').prop('readonly', true);
                     $('input[name="description"]').val(rowData.description);
 
                     $('#addCategoryModalLabel').text('Update Category Details');

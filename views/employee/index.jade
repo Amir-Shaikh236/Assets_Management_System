@@ -28,10 +28,10 @@ block content
         div.row.g-3.pt-1
             div.col-md-6
                 label.form-label.small.fw-semibold.text-secondary.mb-1 Name
-                input.form-control.form-control-sm.shadow-none(type="text", name="name", required)
+                input#Name.form-control.form-control-sm.shadow-none(type="text", name="name", required)
             div.col-md-6
                 label.form-label.small.fw-semibold.text-secondary.mb-1 Email
-                input.form-control.form-control-sm(type="text", name="email", required)
+                input#Email.form-control.form-control-sm(type="text", name="email", required)
             div.col-md-6
                 label.form-label.small.fw-semibold.text-secondary.mb-1 Department 
                 input.form-control.form-control-sm(type="text", name="department", required)
@@ -106,7 +106,7 @@ block scripts
                         render: function(data){
                             if(!data) return '-';
                             var d = new Date(data);
-                            return '<span class="text-secondary small"><i class="bi bi-calendar3 text-muted me-1 text-center"></i>' + (isNaN(d) ? data :  d.toLocaleString()) + '</span>';
+                            return '<span class="text-secondary small"><i class="bi bi-calendar3 text-muted me-1 text-center"></i>' + (isNaN(d) ? data :  d.toISOString().split('T')[0]) + '</span>';
                         }
                     },
 
@@ -153,7 +153,9 @@ block scripts
                     $('#originalEmail').val(rowData.email)
 
                     $('input[name="name"]').val(rowData.name)
+                    $('#Name').prop('readonly', true);
                     $('input[name="email"]').val(rowData.email);
+                    $('#Email').prop('readonly', true);
                     $('input[name="department"]').val(rowData.department)
                     $('input[name="designation"]').val(rowData.designation)
 
