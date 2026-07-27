@@ -117,12 +117,25 @@ export const editAssets = async (req, res, next) => {
 
         const { serialNumber } = req.params;
 
-        const { make, model, value, branch, purchasedDate, status } = req.body;
+        const { make, model, value, branch, purchasedDate, status, categoryName, categoryId } = req.body;
 
         const foundAsset = await Asset.findOne({ where: { serialNumber } });
         if (!foundAsset) return next(new AppError(404, "Assets with this Sr.No. is not found"));
 
-        // const UpdateData = serialNumber || make || model || value || branch || purchasedDate || status;
+        let resolvedCategoryId = categoryId || null;
+
+        if (!resolvedCategoryId && categoryName) {
+            const category = await Category.findOne({
+                where: { name: categoryName.trim() }
+            });
+
+            if (!category) {
+                return next(new AppError(404, "Category not found for the provided name"));
+            }
+
+            resolvedCategoryId = category.id;
+        }
+
 
         if (make) foundAsset.make = make;
         if (model) foundAsset.model = model;

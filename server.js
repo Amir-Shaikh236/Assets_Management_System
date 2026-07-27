@@ -28,7 +28,7 @@ app.use(express.json());
 app.use(cookieParser());
 connectDB();
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 
 app.get("/", (req, res) => {
   res.status(200).json({ status: "success", message: "API is healthy" });
