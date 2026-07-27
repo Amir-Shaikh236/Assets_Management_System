@@ -122,9 +122,11 @@ export const editAssets = async (req, res, next) => {
         const foundAsset = await Asset.findOne({ where: { serialNumber } });
         if (!foundAsset) return next(new AppError(404, "Assets with this Sr.No. is not found"));
 
-        let resolvedCategoryId = categoryId || null;
+        let resolvedCategoryId = foundAsset.categoryId;
 
-        if (!resolvedCategoryId && categoryName) {
+        if (categoryId !== undefined && categoryId !== null && categoryId !== '') {
+            resolvedCategoryId = categoryId;
+        } else if (categoryName && String(categoryName).trim() !== '') {
             const category = await Category.findOne({
                 where: { name: categoryName.trim() }
             });
@@ -136,13 +138,15 @@ export const editAssets = async (req, res, next) => {
             resolvedCategoryId = category.id;
         }
 
-
         if (make) foundAsset.make = make;
         if (model) foundAsset.model = model;
         if (value) foundAsset.value = value;
         if (branch) foundAsset.branch = branch;
         if (purchasedDate) foundAsset.purchasedDate = purchasedDate;
         if (status) foundAsset.status = status;
+        if (resolvedCategoryId !== undefined && resolvedCategoryId !== null) {
+            foundAsset.categoryId = resolvedCategoryId;
+        }
 
         await foundAsset.save();
 
@@ -150,6 +154,7 @@ export const editAssets = async (req, res, next) => {
             message: "Assets Updated Successfully",
             Asset: {
                 make: foundAsset.make,
+                categoryId: resolvedCategoryId,
                 model: foundAsset.model,
                 value: foundAsset.value,
                 branch: foundAsset.branch,
@@ -180,7 +185,6 @@ export const deleteAsset = async (req, res, next) => {
     }
 }
 
-// Issued Asset
 export const issueAsset = async (req, res, next) => {
 
     const t = await sequelize.transaction();

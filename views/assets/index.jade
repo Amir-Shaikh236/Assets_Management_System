@@ -33,7 +33,7 @@ block content
                 input.form-control.form-control-sm.shadow-none(type="text", name="serialNumber", required)
             div.col-md-6
                 label.form-label.small.fw-semibold.text-secondary.mb-1 Category Name
-                input.form-control.form-control-sm.shadow-none(type="text", name="Cname", required)
+                input.form-control.form-control-sm.shadow-none(type="text", name="categoryName", required)
             div.col-md-6
                 label.form-label.small.fw-semibold.text-secondary.mb-1 Make
                 input.form-control.form-control-sm(type="text", name="make", required)
@@ -227,7 +227,7 @@ block scripts
                     $('input[name="model"]').val(rowData.model)
                     $('input[name="value"]').val(rowData.value)
                     $('input[name="branch"]').val(rowData.branch)
-                    $('input[name="Cid"]').val(rowData.categoryId)
+                    $('input[name="categoryName"]').val(rowData.category && rowData.category.name ? rowData.category.name : '')
 
                     if(rowData.purchasedDate){
                         var d = new Date(rowData.purchasedDate)
@@ -341,7 +341,7 @@ block scripts
                         return; 
                     }
 
-                    if(field.name === 'Cname'){
+                    if(field.name === 'categoryName'){
                         payload.categoryName = field.value;
                         return;
                     }
@@ -401,17 +401,17 @@ block scripts
 
             });
 
-            $('#confirmScrapAssetBtn').on('click', function(){
+            $('#confirmScrapAssetBtn').off('click').on('click', function(){
                 var reason = $('#scrapReason').val().trim();
-                var submitBtn = $('#assetForm button[type="submit"]');
-                var originalBtnText = submitBtn.text();
+                var confirmBtn = $(this);
+                var originalBtnText = confirmBtn.text();
 
                 if(!pendingScrapAssetId){
                     $('#scrapAssetConfirmModal').modal('hide');
                     return;
                 }
 
-                submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Scrapping...');
+                confirmBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Scrapping...');
 
                 $.ajax({
                     url: API_SCRAP_URL + encodeURIComponent(pendingScrapAssetId),
@@ -435,7 +435,7 @@ block scripts
                         alert('Error: ' + errMsg);
                     },
                     complete: function(){
-                        submitBtn.prop('disabled', false).text(originalBtnText);
+                        confirmBtn.prop('disabled', false).text(originalBtnText);
                         pendingScrapAssetId = null;
                         pendingScrapSerialNumber = null;
                     }
